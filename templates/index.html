@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингара — Текстовая RPG</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            text-align: center;
+            max-width: 400px;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 48px;
+            color: #f0c040;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #888;
+            margin-bottom: 40px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-new {
+            background: #2a6e2a;
+            color: white;
+        }
+        .btn-new:hover { background: #358535; }
+        .btn-load {
+            background: #2a4a6e;
+            color: white;
+        }
+        .btn-load:hover { background: #355885; }
+        .btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>КСИНГАР</h1>
+        <p class="subtitle">Текстовая RPG-игра</p>
+
+        <button class="btn btn-new" onclick="newGame()">НОВАЯ ИГРА</button>
+        <button class="btn btn-load" onclick="loadGame()">ЗАГРУЗИТЬ ИГРУ</button>
+    </div>
+
+    <script>
+        // Пока простая заглушка — потом подключим к API
+        function newGame() {
+            window.location.href = '/intro/';
+        }
+
+        function loadGame() {
+            alert('Загрузка игры — в разработке');
+        }
+
+        // Проверка, что сервер работает
+        fetch('/api/status/')
+            .then(r => r.json())
+            .then(data => console.log('Сервер:', data.message))
+            .catch(err => console.log('Сервер не отвечает'));
+    </script>
+</body>
+</html>

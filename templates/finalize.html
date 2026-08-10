@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингар — Последние штрихи</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 450px;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 28px;
+            color: #f0c040;
+            margin-bottom: 20px;
+        }
+        .summary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        .summary-item {
+            text-align: center;
+        }
+        .summary-icon {
+            font-size: 48px;
+        }
+        .summary-name {
+            font-size: 14px;
+            color: #aaa;
+            margin-top: 5px;
+        }
+        .summary-plus {
+            font-size: 24px;
+            color: #888;
+        }
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        .stat { font-weight: bold; }
+        .stat-str { color: #e55; }
+        .stat-agi { color: #5e5; }
+        .stat-int { color: #55e; }
+        hr {
+            border: none;
+            border-top: 1px solid #333;
+            margin: 20px 0;
+        }
+        h2 {
+            font-size: 18px;
+            color: #ccc;
+            margin-bottom: 15px;
+        }
+        .gender-row {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+        .gender-card {
+            background: #1a1a2e;
+            border: 2px solid #2a2a4e;
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 140px;
+            text-align: center;
+        }
+        .gender-card:hover {
+            border-color: #888;
+        }
+        .gender-card.selected-male {
+            border-color: #4488ff;
+            background: #1a2a3e;
+        }
+        .gender-card.selected-female {
+            border-color: #ff4488;
+            background: #2a1a2e;
+        }
+        .gender-icon {
+            font-size: 56px;
+            margin-bottom: 8px;
+        }
+        .gender-name {
+            font-size: 16px;
+            color: #e0e0e0;
+            font-weight: bold;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 16px;
+            color: #ccc;
+            margin-bottom: 8px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #2a2a4e;
+            border-radius: 8px;
+            background: #1a1a2e;
+            color: #e0e0e0;
+            font-size: 18px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus {
+            border-color: #f0c040;
+        }
+        .input-group input.valid {
+            border-color: #2a6e2a;
+            background: #1a2a1e;
+        }
+        .input-group input.invalid {
+            border-color: #6e2a2a;
+            background: #2a1a1e;
+        }
+        .hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+        .btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+        .btn-start {
+            background: #2a6e2a;
+            color: white;
+        }
+        .btn-start:hover:not(:disabled) { background: #358535; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Последние штрихи</h1>
+
+        <!-- Сводка выбора -->
+        <div class="summary" id="summary"></div>
+
+        <!-- Характеристики -->
+        <div class="stats-row" id="statsRow"></div>
+
+        <hr>
+
+        <!-- Выбор пола -->
+        <h2>Выбери пол персонажа:</h2>
+        <div class="gender-row">
+            <div class="gender-card" id="maleCard" onclick="selectGender('male')">
+                <div class="gender-icon" id="maleIcon">🧔</div>
+                <div class="gender-name">♂ Мужчина</div>
+            </div>
+            <div class="gender-card" id="femaleCard" onclick="selectGender('female')">
+                <div class="gender-icon" id="femaleIcon">👩</div>
+                <div class="gender-name">♀ Женщина</div>
+            </div>
+        </div>
+
+        <!-- Ввод имени -->
+        <div class="input-group">
+            <label>Как тебя зовут, путник?</label>
+            <input type="text" id="nameInput" placeholder="Введи имя (2-20 символов)"
+                   maxlength="20" oninput="validateName()">
+            <div class="hint">От 2 до 20 символов</div>
+        </div>
+
+        <button class="btn btn-start" id="startBtn" disabled onclick="startGame()">
+            В ПУТЬ!
+        </button>
+    </div>
+
+    <script>
+        const selectedRace = JSON.parse(localStorage.getItem('selectedRace') || '{}');
+        const selectedElement = JSON.parse(localStorage.getItem('selectedElement') || '{}');
+
+        let selectedGender = null;
+
+        // Сводка
+        document.getElementById('summary').innerHTML = `
+            <div class="summary-item">
+                <div class="summary-icon">${selectedRace.icon || '❓'}</div>
+                <div class="summary-name">${selectedRace.name || '???'}</div>
+            </div>
+            <div class="summary-plus">+</div>
+            <div class="summary-item">
+                <div class="summary-icon">${selectedElement.icon || '❓'}</div>
+                <div class="summary-name">${selectedElement.name || '???'}</div>
+            </div>
+        `;
+
+        // Характеристики
+        const stats = selectedRace.stats || { strength: 0, agility: 0, intelligence: 0 };
+        document.getElementById('statsRow').innerHTML = `
+            <span class="stat stat-str">💪 ${stats.strength}</span>
+            <span class="stat stat-agi">🏃 ${stats.agility}</span>
+            <span class="stat stat-int">🧠 ${stats.intelligence}</span>
+        `;
+
+        // Иконки пола
+        const raceId = selectedRace.id || 'human';
+        document.getElementById('maleIcon').textContent = getGenderIcon(raceId, 'male');
+        document.getElementById('femaleIcon').textContent = getGenderIcon(raceId, 'female');
+
+        function getGenderIcon(raceId, gender) {
+            const icons = {
+                human: { male: '🧔', female: '👩' },
+                elf: { male: '🧝', female: '🧝‍♀️' },
+                gnome: { male: '🧔‍♂️', female: '👩‍🔬' },
+                alfir: { male: '🧝‍♂️', female: '🧝‍♀️' },
+                hardl: { male: '🛡️', female: '🛡️' },
+                elgarn: { male: '🔮', female: '🔮' },
+                adamantin: { male: '⚙️', female: '⚙️' },
+                luminar: { male: '✨', female: '✨' },
+                kinetik: { male: '🤖', female: '🤖' },
+            };
+            return (icons[raceId] && icons[raceId][gender]) || (gender === 'male' ? '🧔' : '👩');
+        }
+
+        function selectGender(gender) {
+            selectedGender = gender;
+            document.getElementById('maleCard').className = 'gender-card' + (gender === 'male' ? ' selected-male' : '');
+            document.getElementById('femaleCard').className = 'gender-card' + (gender === 'female' ? ' selected-female' : '');
+            checkReady();
+        }
+
+        function validateName() {
+            const input = document.getElementById('nameInput');
+            const name = input.value.trim();
+            if (name.length >= 2 && name.length <= 20) input.className = 'valid';
+            else if (name.length > 0) input.className = 'invalid';
+            else input.className = '';
+            checkReady();
+        }
+
+        function checkReady() {
+            const name = document.getElementById('nameInput').value.trim();
+            const valid = name.length >= 2 && name.length <= 20 && selectedGender !== null;
+            document.getElementById('startBtn').disabled = !valid;
+        }
+
+        function startGame() {
+            const name = document.getElementById('nameInput').value.trim();
+            localStorage.setItem('playerName', name);
+            localStorage.setItem('selectedGender', selectedGender);
+            window.location.href = '/save-game/';
+        }
+    </script>
+</body>
+</html>

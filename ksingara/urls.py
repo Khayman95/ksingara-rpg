@@ -1,22 +1,15 @@
-"""
-URL configuration for ksingara project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from game import views as game_views
 
 urlpatterns = [
+    path('', game_views.index, name='index'),
+    path('intro/', game_views.intro, name='intro'),
+    path('race-select/', game_views.race_select, name='race_select'),
+    path('element-select/', game_views.element_select, name='element_select'),
+    path('finalize/', game_views.finalize, name='finalize'),        # ← Эта строка
+    path('save-game/', game_views.save_game, name='save_game'),
+    path('map/', game_views.map_view, name='map'),
     path('admin/', admin.site.urls),
+    path('api/', include('game.urls')),
 ]

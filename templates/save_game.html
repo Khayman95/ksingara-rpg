@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингар — Сохранение</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 450px;
+            width: 100%;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 28px;
+            color: #f0c040;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .hint {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+        .slot {
+            display: flex;
+            align-items: center;
+            background: #1a1a2e;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            gap: 12px;
+        }
+        .slot-info {
+            flex-grow: 1;
+        }
+        .slot-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+        .slot-name.empty {
+            color: #666;
+        }
+        .slot-detail {
+            font-size: 13px;
+            color: #888;
+            margin-top: 3px;
+        }
+        .slot-date {
+            font-size: 11px;
+            color: #555;
+            margin-top: 2px;
+        }
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .btn-save {
+            background: #2a5a8e;
+            color: white;
+        }
+        .btn-save:hover { background: #356a9e; }
+        .btn-delete {
+            background: #6e2a2a;
+            color: white;
+        }
+        .btn-delete:hover { background: #8e3a3a; }
+        .btn-back {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            background: #333;
+            color: #ccc;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .btn-back:hover { background: #444; }
+        .success-msg {
+            text-align: center;
+            color: #5e5;
+            font-size: 14px;
+            margin-top: 15px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .success-msg.show { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💾 СОХРАНИТЬ ИГРУ</h1>
+        <p class="hint">Выбери слот для сохранения персонажа</p>
+
+        <div id="slots"></div>
+
+        <div class="success-msg" id="successMsg">✅ Игра сохранена!</div>
+
+        <button class="btn-back" onclick="goToMap()">🚶 Продолжить на карту</button>
+    </div>
+
+    <script>
+        // Загружаем сохранения из localStorage (потом будет API)
+        function getSaves() {
+            const saves = {};
+            for (let i = 1; i <= 3; i++) {
+                const data = localStorage.getItem(`savegame_${i}`);
+                saves[i] = data ? JSON.parse(data) : null;
+            }
+            return saves;
+        }
+
+        function renderSlots() {
+            const saves = getSaves();
+            const container = document.getElementById('slots');
+            container.innerHTML = '';
+
+            for (let i = 1; i <= 3; i++) {
+                const save = saves[i];
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+
+                if (save) {
+                    slot.innerHTML = `
+                        <div class="slot-info">
+                            <div class="slot-name">Слот ${i}: ${save.name}</div>
+                            <div class="slot-detail">${save.raceName} | ${save.elementName} | Ур.${save.level || 1}</div>
+                            <div class="slot-date">${save.timestamp}</div>
+                        </div>
+                        <button class="btn btn-delete" onclick="deleteSave(${i})">✕</button>
+                    `;
+                } else {
+                    slot.innerHTML = `
+                        <div class="slot-info">
+                            <div class="slot-name empty">Слот ${i}: [ПУСТО]</div>
+                            <div class="slot-detail"></div>
+                        </div>
+                        <button class="btn btn-save" onclick="saveToSlot(${i})">Сохранить</button>
+                    `;
+                }
+
+                container.appendChild(slot);
+            }
+        }
+
+        function saveToSlot(slot) {
+            const character = JSON.parse(localStorage.getItem('selectedRace') || '{}');
+            const element = JSON.parse(localStorage.getItem('selectedElement') || '{}');
+            const name = document.querySelector('#nameInput')?.value || localStorage.getItem('playerName') || 'Герой';
+            const gender = localStorage.getItem('selectedGender') || 'male';
+
+            const saveData = {
+                name: name,
+                gender: gender,
+                race: character.id,
+                raceName: character.name,
+                element: element.id,
+                elementName: element.name,
+                level: 1,
+                timestamp: new Date().toLocaleString('ru-RU'),
+            };
+
+            localStorage.setItem(`savegame_${slot}`, JSON.stringify(saveData));
+
+            const msg = document.getElementById('successMsg');
+            msg.classList.add('show');
+            setTimeout(() => msg.classList.remove('show'), 2000);
+
+            renderSlots();
+        }
+
+        function deleteSave(slot) {
+            if (confirm(`Удалить сохранение в слоте ${slot}?`)) {
+                localStorage.removeItem(`savegame_${slot}`);
+                renderSlots();
+            }
+        }
+
+        function goToMap() {
+            window.location.href = '/map/';
+        }
+
+        renderSlots();
+    </script>
+</body>
+</html>

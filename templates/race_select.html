@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингар — Выбор расы</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 28px;
+            color: #f0c040;
+            margin-bottom: 20px;
+        }
+        .race-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .race-card {
+            background: #1a1a2e;
+            border: 2px solid #2a2a4e;
+            border-radius: 12px;
+            padding: 15px 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .race-card:hover {
+            border-color: #4a6a9e;
+            background: #1e1e38;
+            transform: scale(1.03);
+        }
+        .race-card.selected {
+            border-color: #f0c040;
+            background: #1e1e20;
+        }
+        .race-icon {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+        .race-name {
+            font-size: 14px;
+            color: #e0e0e0;
+            font-weight: bold;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-decoration: none;
+        }
+        .btn:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+        .btn-next {
+            background: #2a6e2a;
+            color: white;
+        }
+        .btn-next:hover:not(:disabled) { background: #358535; }
+
+        /* Попап */
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        .popup-overlay.active { display: flex; }
+        .popup {
+            background: #1a1a2e;
+            border: 2px solid #f0c040;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        .popup h2 {
+            color: #f0c040;
+            margin-bottom: 10px;
+        }
+        .popup .race-desc {
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        .popup .stats {
+            margin-bottom: 15px;
+        }
+        .popup .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .popup .stat-bar {
+            width: 70%;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .popup .stat-fill {
+            height: 100%;
+            border-radius: 5px;
+        }
+        .popup .stat-fill.strength { background: #e55; }
+        .popup .stat-fill.agility { background: #5e5; }
+        .popup .stat-fill.intelligence { background: #55e; }
+        .popup .bonus {
+            background: #2a2010;
+            padding: 10px;
+            border-radius: 8px;
+            color: #f0c040;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+        .popup-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .popup-buttons .btn {
+            flex: 1;
+            font-size: 14px;
+            padding: 10px;
+        }
+        .btn-cancel { background: #6e2a2a; color: white; }
+        .btn-confirm { background: #2a6e2a; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Выбери свою расу</h1>
+
+        <div class="race-grid" id="raceGrid"></div>
+
+        <button class="btn btn-next" id="nextBtn" disabled onclick="goToElementSelect()">
+            Далее →
+        </button>
+    </div>
+
+    <!-- Попап подтверждения -->
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="popup">
+            <h2 id="popupName"></h2>
+            <p class="race-desc" id="popupDesc"></p>
+
+            <div class="stats">
+                <div class="stat-row">
+                    <span>💪 Сила: <b id="statStr">0</b></span>
+                    <div class="stat-bar">
+                        <div class="stat-fill strength" id="barStr" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="stat-row">
+                    <span>🏃 Ловкость: <b id="statAgi">0</b></span>
+                    <div class="stat-bar">
+                        <div class="stat-fill agility" id="barAgi" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="stat-row">
+                    <span>🧠 Интеллект: <b id="statInt">0</b></span>
+                    <div class="stat-bar">
+                        <div class="stat-fill intelligence" id="barInt" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bonus" id="popupBonus"></div>
+
+            <div class="popup-buttons">
+                <button class="btn btn-cancel" onclick="closePopup()">Нет, выбрать другую</button>
+                <button class="btn btn-confirm" onclick="confirmRace()">Да, играть этой расой</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Данные рас (временно здесь, потом будут из API)
+        const races = [
+            { id: 'human', name: 'Человек', icon: '🧔', desc: 'Адаптивность, жажда нового, эклектичная магия.', stats: { strength: 16, agility: 12, intelligence: 12 }, bonus: '+1 ко всем характеристикам при создании' },
+            { id: 'elf', name: 'Эльф', icon: '🧝', desc: 'Магия гармонии с природой, биотехнологии.', stats: { strength: 12, agility: 16, intelligence: 12 }, bonus: '+10% к шансу критического урона' },
+            { id: 'gnome', name: 'Гном', icon: '🧔‍♂️', desc: 'Магия рун и формул. Не просят, а заставляют стихии подчиняться воле.', stats: { strength: 12, agility: 12, intelligence: 16 }, bonus: '+20% к защите от физического урона' },
+            { id: 'alfir', name: 'Альфир', icon: '🧝‍♂️', desc: 'Дипломаты, артисты, эмпаты. Мост между мирами.', stats: { strength: 14, agility: 14, intelligence: 12 }, bonus: '+15% к урону в ближнем бою' },
+            { id: 'hardl', name: 'Хардлы', icon: '🛡️', desc: 'Крепкие, выносливые, лучшие тактики и стратеги.', stats: { strength: 14, agility: 12, intelligence: 14 }, bonus: '+15% к эффективности заклинаний иллюзий' },
+            { id: 'elgarn', name: 'Эльгарн', icon: '🔮', desc: 'Величайшие артефакторы. Умеют «петь» руны, создавая живые артефакты.', stats: { strength: 12, agility: 14, intelligence: 14 }, bonus: '+10% к шансу уклонения от атак' },
+            { id: 'adamantin', name: 'Адамантин', icon: '⚙️', desc: 'Инженеры-теурги, создатели саморегулирующихся машин.', stats: { strength: 15, agility: 13, intelligence: 12 }, bonus: 'Дыхание дракона (урон зависит от выбранной стихии)' },
+            { id: 'luminar', name: 'Люминар', icon: '✨', desc: 'Жрецы-артефакторы, создатели величайших реликвий.', stats: { strength: 13, agility: 12, intelligence: 15 }, bonus: '+15% к урону тёмной магией' },
+            { id: 'kinetik', name: 'Кинетик', icon: '🤖', desc: 'Конструкторы подвижных артефактов — самосборных механизмов, оружия, управляемого мыслью.', stats: { strength: 12, agility: 15, intelligence: 13 }, bonus: '+20% к эффективности исцеляющих заклинаний' },
+        ];
+
+        let selectedRace = null;
+
+        // Рисуем сетку рас
+        const grid = document.getElementById('raceGrid');
+        races.forEach(race => {
+            const card = document.createElement('div');
+            card.className = 'race-card';
+            card.innerHTML = `
+                <div class="race-icon">${race.icon}</div>
+                <div class="race-name">${race.name}</div>
+            `;
+            card.onclick = () => showRacePopup(race);
+            grid.appendChild(card);
+        });
+
+        function showRacePopup(race) {
+            document.getElementById('popupName').textContent = race.name;
+            document.getElementById('popupDesc').textContent = race.desc;
+            document.getElementById('statStr').textContent = race.stats.strength;
+            document.getElementById('statAgi').textContent = race.stats.agility;
+            document.getElementById('statInt').textContent = race.stats.intelligence;
+            document.getElementById('barStr').style.width = (race.stats.strength / 16 * 100) + '%';
+            document.getElementById('barAgi').style.width = (race.stats.agility / 16 * 100) + '%';
+            document.getElementById('barInt').style.width = (race.stats.intelligence / 16 * 100) + '%';
+            document.getElementById('popupBonus').textContent = '✨ ' + race.bonus;
+
+            selectedRace = race;
+            document.getElementById('popupOverlay').classList.add('active');
+        }
+
+        function closePopup() {
+            document.getElementById('popupOverlay').classList.remove('active');
+            selectedRace = null;
+        }
+
+        function confirmRace() {
+            // Подсвечиваем выбранную расу
+            document.querySelectorAll('.race-card').forEach(c => c.classList.remove('selected'));
+            const cards = document.querySelectorAll('.race-card');
+            const index = races.indexOf(selectedRace);
+            if (index >= 0) cards[index].classList.add('selected');
+
+            document.getElementById('nextBtn').disabled = false;
+            closePopup();
+
+            // Сохраняем выбор (потом в API)
+            localStorage.setItem('selectedRace', JSON.stringify(selectedRace));
+        }
+
+        function goToElementSelect() {
+            window.location.href = '/element-select/';
+        }
+    </script>
+</body>
+</html>
