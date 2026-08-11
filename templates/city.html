@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингар — Город</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 26px;
+            color: #f0c040;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .assistant {
+            display: flex;
+            gap: 15px;
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        .assistant-icon {
+            font-size: 64px;
+            flex-shrink: 0;
+        }
+        .assistant-info {
+            flex-grow: 1;
+        }
+        .assistant-name {
+            font-size: 18px;
+            color: #6a9eff;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .assistant-text {
+            font-size: 14px;
+            color: #aaa;
+            line-height: 1.5;
+        }
+        .districts {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .district-card {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-decoration: none;
+            color: inherit;
+        }
+        .district-card:hover {
+            border-color: #4a6a9e;
+            background: #1e1e38;
+        }
+        .district-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+        .district-desc {
+            font-size: 12px;
+            color: #888;
+            margin-top: 3px;
+        }
+        .district-arrow {
+            font-size: 20px;
+            color: #666;
+        }
+        .btn-back {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #333;
+            color: #ccc;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .btn-back:hover { background: #444; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="cityName">🏰 Город</h1>
+
+        <!-- Ассистентка Лиара -->
+        <div class="assistant">
+            <div class="assistant-icon">🧝‍♀️</div>
+            <div class="assistant-info">
+                <div class="assistant-name">Лиара</div>
+                <div class="assistant-text" id="liaraText">
+                    Добро пожаловать! Я Лиара, твой ассистент. Я буду сопровождать тебя повсюду.
+                </div>
+            </div>
+        </div>
+
+        <!-- Районы -->
+        <div class="districts">
+            <a href="/trade-district/" class="district-card">
+                <div>
+                    <div class="district-name">🛒 Торговый район</div>
+                    <div class="district-desc">Торговец, кузнец, чёрный рынок</div>
+                </div>
+                <span class="district-arrow">→</span>
+            </a>
+
+            <a href="/admin-district/" class="district-card">
+                <div>
+                    <div class="district-name">🏛️ Административный район</div>
+                    <div class="district-desc">Круг доступа, Круг Великих</div>
+                </div>
+                <span class="district-arrow">→</span>
+            </a>
+
+            <a href="/living-district/" class="district-card">
+                <div>
+                    <div class="district-name">🏘️ Жилой район</div>
+                    <div class="district-desc">Питомник, таверна, бордель</div>
+                </div>
+                <span class="district-arrow">→</span>
+            </a>
+        </div>
+
+        <button class="btn-back" onclick="leaveCity()">🚶 Выйти на карту</button>
+    </div>
+
+    <script>
+        async function leaveCity() {
+            await autosave();
+            window.location.href = '/map/';
+        }
+    </script>
+
+    <script>
+        // Пока заглушка — потом загрузим из API
+        const cityName = localStorage.getItem('currentCity') || 'Город';
+        document.getElementById('cityName').textContent = '🏰 ' + cityName;
+
+        // Случайная подсказка Лиары
+        const tips = [
+            'Добро пожаловать! Я Лиара, твой ассистент. Я буду сопровождать тебя повсюду.',
+            'Сила влияет не только на урон атаки, но и на твоё здоровье.',
+            'Ловкость увеличивает шанс уклонения от атак врагов.',
+            'Интеллект влияет на урон магических навыков и запас маны.',
+            'Не забывай тренироваться в Круге Великих — там можно улучшить характеристики.',
+            'В таверне можно не только отдохнуть, но и купить провиант перед долгим путешествием.',
+        ];
+
+        // Первый раз — приветствие, потом — случайная подсказка
+        const visited = localStorage.getItem('cityVisited');
+        if (!visited) {
+            document.getElementById('liaraText').textContent =
+                'Привет! Я Лиара, твой ассистент. Я буду сопровождать тебя повсюду. Если хочешь что-нибудь узнать — просто спроси меня!';
+            localStorage.setItem('cityVisited', 'true');
+        } else {
+            document.getElementById('liaraText').textContent = tips[Math.floor(Math.random() * tips.length)];
+        }
+    </script>
+    <script src="/static/js/autosave.js"></script>
+    <script>
+        // Автосохранение при уходе со страницы
+        window.addEventListener('beforeunload', () => autosave());
+
+        // Или автосохранение каждые 30 секунд
+        setInterval(() => autosave(), 30000);
+    </script>
+    <script src="/static/js/autosave.js"></script>
+    <script src="/static/js/navbar.js"></script>
+</body>
+</html>

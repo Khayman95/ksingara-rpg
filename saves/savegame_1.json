@@ -1,0 +1,14 @@
+{
+  "slot": 1,
+  "name": "Khayman",
+  "gender": "male",
+  "race": "human",
+  "raceName": "Человек",
+  "element": "plasma",
+  "elementName": "Плазма (Астралис)",
+  "stats": {},
+  "playerX": 7,
+  "playerY": 6,
+  "citySelected": true,
+  "currentScreen": "city"
+}

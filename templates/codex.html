@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингар — Кодекс</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            color: #f0c040;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 8px 14px;
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #aaa;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            background: #2a2a4e;
+            color: #f0c040;
+            border-color: #f0c040;
+        }
+        .tab-content {
+            background: #1a1a2e;
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 300px;
+        }
+        .info-card {
+            background: #151520;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+        .info-card h3 {
+            font-size: 16px;
+            color: #f0c040;
+            margin-bottom: 5px;
+        }
+        .info-card p {
+            font-size: 13px;
+            color: #aaa;
+            line-height: 1.4;
+        }
+        .info-card .services {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        .info-card.monster-known {
+            border-left: 3px solid #4a4;
+        }
+        .info-card.monster-unknown {
+            border-left: 3px solid #444;
+            opacity: 0.6;
+        }
+        .btn-back {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background: #333;
+            color: #ccc;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .btn-back:hover { background: #444; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📖 КОДЕКС</h1>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('cities')">🏙️ Города</div>
+            <div class="tab" onclick="switchTab('monsters')">👹 Монстры</div>
+            <div class="tab" onclick="switchTab('quests')">📜 Квесты</div>
+            <div class="tab" onclick="switchTab('recipes')">⚗️ Рецепты</div>
+        </div>
+
+        <div class="tab-content" id="tabContent"></div>
+
+        <button class="btn-back" onclick="window.history.back()">← Закрыть</button>
+    </div>
+
+    <script>
+        const tabData = {
+            cities: {
+                title: '🏙️ Города',
+                items: [
+                    { name: 'Ксин-Дарос (Столица)', desc: 'Великая столица королевства. Сердце торговли и магии.', services: 'Таверна, рынок, кузнец, гильдия, храм, библиотека' },
+                    { name: 'Порт Изумрудных Ветров', desc: 'Крупнейший порт королевства. Морские ворота.', services: 'Таверна, рынок, верфь, таверна' },
+                    { name: 'Цитадель Вечного Льда', desc: 'Суровая северная крепость. Опасные земли.', services: 'Таверна, кузнец, храм, казармы' },
+                ]
+            },
+            monsters: {
+                title: '👹 Монстры',
+                items: [
+                    { name: 'Волк', known: true, stats: '❤️30 ⚔️8 🛡️2 ⭐15', loot: 'Шкура волка' },
+                    { name: 'Медведь', known: false, stats: '???', loot: '???' },
+                    { name: 'Гигантский скорпион', known: false, stats: '???', loot: '???' },
+                    { name: 'Морской змей', known: false, stats: '???', loot: '???' },
+                    { name: 'Горный тролль', known: false, stats: '???', loot: '???' },
+                    { name: 'Драконий детёныш', known: false, stats: '???', loot: '???' },
+                ]
+            },
+            quests: {
+                title: '📜 Квесты',
+                items: [
+                    { name: 'Активные задания', desc: 'Нет активных заданий' },
+                    { name: 'Выполненные', desc: 'Нет выполненных заданий' },
+                ]
+            },
+            recipes: {
+                title: '⚗️ Рецепты',
+                items: [
+                    { name: 'Нет найденных рецептов', desc: 'Исследуй мир, чтобы находить рецепты крафта!' },
+                ]
+            },
+        };
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const data = tabData[tabId];
+            let html = `<h2 style="color:#f0c040;margin-bottom:15px">${data.title}</h2>`;
+
+            data.items.forEach(item => {
+                if (tabId === 'monsters') {
+                    html += `
+                        <div class="info-card ${item.known ? 'monster-known' : 'monster-unknown'}">
+                            <h3>${item.known ? '👹' : '❓'} ${item.name}</h3>
+                            <p>${item.stats}</p>
+                            <p>Добыча: ${item.loot}</p>
+                        </div>`;
+                } else if (tabId === 'cities') {
+                    html += `
+                        <div class="info-card">
+                            <h3>🏰 ${item.name}</h3>
+                            <p>${item.desc}</p>
+                            <p class="services">Услуги: ${item.services}</p>
+                        </div>`;
+                } else {
+                    html += `
+                        <div class="info-card">
+                            <h3>${item.name}</h3>
+                            <p>${item.desc}</p>
+                        </div>`;
+                }
+            });
+
+            document.getElementById('tabContent').innerHTML = html;
+        }
+
+        // Показываем первую вкладку
+        switchTab('cities');
+    </script>
+</body>
+</html>

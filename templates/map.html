@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингар — Карта мира</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            text-align: center;
+            padding: 10px;
+        }
+        h1 {
+            font-size: 22px;
+            color: #f0c040;
+            margin-bottom: 10px;
+        }
+        .map-wrapper {
+            overflow: auto;
+            max-width: 95vw;
+            max-height: 70vh;
+            border: 2px solid #333;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        table {
+            border-collapse: collapse;
+        }
+        td {
+            width: 28px;
+            height: 28px;
+            border: 1px solid #1a1a2a;
+            text-align: center;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        td:hover {
+            transform: scale(1.2);
+            z-index: 10;
+            box-shadow: 0 0 6px #fff8;
+        }
+        td.player {
+            box-shadow: inset 0 0 0 3px #ff0;
+            font-size: 18px;
+        }
+        td.city {
+            font-size: 18px;
+            animation: pulse 2s infinite;
+        }
+        td.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: inset 0 0 5px #f0c040; }
+            50% { box-shadow: inset 0 0 15px #f0c040; }
+        }
+        .info-panel {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .cell-info {
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 14px;
+            color: #ccc;
+            min-width: 200px;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: 60px 60px 60px;
+            grid-template-rows: 60px 60px 60px;
+            gap: 3px;
+        }
+        .ctrl-btn {
+            background: #2a2a4e;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .ctrl-btn:hover { background: #3a3a6e; }
+        .ctrl-btn:active { background: #4a4a8e; }
+        .btn-back {
+            display: inline-block;
+            padding: 10px 25px;
+            margin-top: 15px;
+            background: #333;
+            color: #ccc;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-back:hover { background: #444; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗺️ КАРТА МИРА</h1>
+        <div id="posLabel" style="font-size: 13px; color: #888; margin-bottom: 8px;">Позиция: [13, 13]</div>
+
+        <div class="map-wrapper">
+            <table id="mapTable"></table>
+        </div>
+
+        <div class="info-panel">
+            <div class="cell-info" id="cellInfo">Выбери стартовый город</div>
+
+            <div class="controls">
+                <div></div>
+                <button class="ctrl-btn" onclick="movePlayer(-1, 0)">↑</button>
+                <div></div>
+                <button class="ctrl-btn" onclick="movePlayer(0, -1)">←</button>
+                <div style="font-size:20px;display:flex;align-items:center;justify-content:center;">📍</div>
+                <button class="ctrl-btn" onclick="movePlayer(0, 1)">→</button>
+                <div></div>
+                <button class="ctrl-btn" onclick="movePlayer(1, 0)">↓</button>
+                <div></div>
+            </div>
+        </div>
+
+        <button class="btn-back" onclick="window.location.href='/'">🏠 В меню</button>
+    </div>
+
+    <script>
+        const MAP_SIZE = 27;
+        let playerX = 13;
+        let playerY = 13;
+        let citySelected = false;
+        let choosingCity = true;
+
+        // Биомы (запасные цвета, если API не ответит)
+        const biomesFallback = {
+            'desert':       { name: 'Пустыня', color: '#d9b340', icon: '🏜️' },
+            'forest':       { name: 'Лес', color: '#267326', icon: '🌳' },
+            'sea':          { name: 'Море', color: '#1a59b3', icon: '🌊' },
+            'ocean':        { name: 'Океан', color: '#0d3373', icon: '🌊' },
+            'beach':        { name: 'Пляж', color: '#e6d999', icon: '🏖️' },
+            'savanna':      { name: 'Саванна', color: '#bfa633', icon: '🌾' },
+            'taiga':        { name: 'Тайга', color: '#1a5933', icon: '🌲' },
+            'jungle':       { name: 'Джунгли', color: '#14661a', icon: '🌴' },
+            'mountains':    { name: 'Горы', color: '#808066', icon: '⛰️' },
+        };
+
+        let mapGrid = {};  // { "x,y": { biome, color, ... } }
+
+        // Загружаем карту из API
+        async function loadMap() {
+            try {
+                const response = await fetch('/api/map-data/');
+                const data = await response.json();
+
+                if (data.cells && Object.keys(data.cells).length > 0) {
+                    // Карта из базы
+                    for (const [key, cell] of Object.entries(data.cells)) {
+                        const [x, y] = key.split(',').map(Number);
+                        if (!mapGrid[x]) mapGrid[x] = {};
+                        mapGrid[x][y] = {
+                            biome: cell.biome,
+                            name: cell.biome_name,
+                            color: cell.color,
+                            passable: cell.passable,
+                            settlement_name: cell.settlement_name,
+                            settlement_type: cell.settlement_type,
+                        };
+                    }
+                }
+            } catch (e) {
+                console.log('API карты недоступен, использую локальные данные');
+            }
+
+            // Если API не вернул данные — используем заглушку
+            if (Object.keys(mapGrid).length === 0) {
+                for (let x = 0; x < MAP_SIZE; x++) {
+                    mapGrid[x] = {};
+                    for (let y = 0; y < MAP_SIZE; y++) {
+                        const dist = Math.sqrt((x-13)**2 + (y-13)**2);
+                        let biome;
+                        if (dist < 3) biome = 'forest';
+                        else if (dist < 6) biome = ['forest','savanna','jungle'][Math.floor(Math.random()*3)];
+                        else if (dist < 9) biome = ['forest','mountains','taiga'][Math.floor(Math.random()*3)];
+                        else if (dist < 12) biome = ['mountains','desert','taiga','beach'][Math.floor(Math.random()*4)];
+                        else if (dist < 15) biome = ['desert','beach','sea'][Math.floor(Math.random()*3)];
+                        else biome = ['ocean','sea','desert'][Math.floor(Math.random()*3)];
+
+                        mapGrid[x][y] = {
+                            biome: biome,
+                            name: biomesFallback[biome]?.name || '?',
+                            color: biomesFallback[biome]?.color || '#333',
+                            passable: biome !== 'ocean',
+                            settlement_name: null,
+                            settlement_type: null,
+                        };
+                    }
+                }
+                // Города-заглушки
+                mapGrid[13][13].settlement_name = 'Ксин-Дарос (Столица)';
+                mapGrid[13][13].settlement_type = 'city';
+                mapGrid[25][5].settlement_name = 'Порт Изумрудных Ветров';
+                mapGrid[25][5].settlement_type = 'city';
+                mapGrid[4][24].settlement_name = 'Цитадель Вечного Льда';
+                mapGrid[4][24].settlement_type = 'city';
+            }
+
+            renderMap();
+        }
+
+        function getCellColor(x, y) {
+            const cell = mapGrid[x]?.[y];
+            if (cell) return cell.color || '#333';
+            return '#111';
+        }
+
+        function getCellName(x, y) {
+            const cell = mapGrid[x]?.[y];
+            if (!cell) return 'Край света';
+            if (cell.settlement_name) return cell.settlement_name;
+            return cell.name || '?';
+        }
+
+        function isCity(x, y) {
+            const cell = mapGrid[x]?.[y];
+            return cell && cell.settlement_type === 'city';
+        }
+
+        function renderMap() {
+            const table = document.getElementById('mapTable');
+            table.innerHTML = '';
+
+            for (let x = 0; x < MAP_SIZE; x++) {
+                const tr = document.createElement('tr');
+                for (let y = 0; y < MAP_SIZE; y++) {
+                    const td = document.createElement('td');
+                    td.style.backgroundColor = getCellColor(x, y);
+
+                    if (x === playerX && y === playerY) {
+                        td.textContent = '📍';
+                        td.classList.add('player');
+                    } else if (isCity(x, y)) {
+                        td.textContent = '🏰';
+                        td.classList.add('city');
+                    }
+
+                    if (choosingCity && !isCity(x, y)) {
+                        td.classList.add('disabled');
+                    }
+
+                    if (choosingCity && isCity(x, y)) {
+                        td.onclick = () => selectCity(x, y);
+                    } else if (!choosingCity) {
+                        td.onclick = () => moveToCell(x, y);
+                    }
+
+                    tr.appendChild(td);
+                }
+                table.appendChild(tr);
+            }
+
+            updateInfo();
+        }
+
+        function updateInfo() {
+            document.getElementById('posLabel').textContent =
+                choosingCity ? 'Выбери стартовый город' : `Позиция: [${playerX}, ${playerY}]`;
+
+            const cellName = getCellName(playerX, playerY);
+
+            if (isCity(playerX, playerY) && !choosingCity) {
+                const cityName = getCellName(playerX, playerY);
+                localStorage.setItem('currentCity', cityName);
+                document.getElementById('cellInfo').innerHTML = `📍 <b>${cityName}</b> — <a href="/city/" style="color:#f0c040">войти в город</a>`;
+            } else if (choosingCity) {
+                document.getElementById('cellInfo').textContent = 'Нажми на 🏰 чтобы выбрать стартовый город';
+            } else {
+                document.getElementById('cellInfo').textContent = cellName;
+            }
+        }
+
+        function selectCity(x, y) {
+            if (confirm(`Начать приключение в городе?\n\n${getCellName(x, y)}`)) {
+                playerX = x;
+                playerY = y;
+                choosingCity = false;
+                citySelected = true;
+                localStorage.setItem('playerX', x);
+                localStorage.setItem('playerY', y);
+                localStorage.setItem('citySelected', 'true');
+                renderMap();
+            }
+        }
+
+        async function movePlayer(dx, dy) {
+            if (choosingCity) return;
+            const nx = playerX + dx;
+            const ny = playerY + dy;
+            if (nx >= 0 && nx < MAP_SIZE && ny >= 0 && ny < MAP_SIZE) {
+                playerX = nx;
+                playerY = ny;
+                localStorage.setItem('playerX', nx);
+                localStorage.setItem('playerY', ny);
+                renderMap();
+                await autosave();  // ← Автосохранение
+            }
+        }
+
+        function moveToCell(x, y) {
+            if (choosingCity) return;
+            playerX = x;
+            playerY = y;
+            localStorage.setItem('playerX', x);
+            localStorage.setItem('playerY', y);
+            renderMap();
+        }
+
+        // Загружаем позицию
+        const savedX = localStorage.getItem('playerX');
+        const savedY = localStorage.getItem('playerY');
+        if (savedX) { playerX = parseInt(savedX); playerY = parseInt(savedY); }
+        if (localStorage.getItem('citySelected') === 'true') {
+            choosingCity = false;
+            citySelected = true;
+        }
+
+        loadMap();
+    </script>
+    <script src="/static/js/autosave.js"></script>
+    <script>
+        // Автосохранение при уходе со страницы
+        window.addEventListener('beforeunload', () => autosave());
+
+        // Или автосохранение каждые 30 секунд
+        setInterval(() => autosave(), 30000);
+    </script>
+    <script src="/static/js/autosave.js"></script>
+    <script src="/static/js/navbar.js"></script>
+</body>
+</html>

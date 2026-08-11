@@ -112,17 +112,16 @@
 </head>
 <body>
     <div class="container">
-        <h1>💾 СОХРАНИТЬ ИГРУ</h1>
-        <p class="hint">Выбери слот для сохранения персонажа</p>
+        <h1>📂 ЗАГРУЗИТЬ ИГРУ</h1>
+        <p class="hint">Выбери слот для загрузки персонажа</p>
 
         <div id="slots"></div>
 
         <div class="success-msg" id="successMsg">✅ Игра сохранена!</div>
 
-        <button class="btn-back" onclick="goToMap()">🚶 Продолжить на карту</button>
+        <button class="btn-back" onclick="window.location.href='/'">← Назад</button>
     </div>
 
-    <script src="/static/js/autosave.js"></script>
     <script>
         async function getSaves() {
             const response = await fetch('/api/saves/');
@@ -162,74 +161,15 @@
             }
         }
 
-        async function saveToSlot(slot) {
-            let race = {};
-            let element = {};
-
-            try {
-                const raceStr = localStorage.getItem('selectedRace');
-                if (raceStr && raceStr !== 'undefined' && raceStr !== 'null') {
-                    race = JSON.parse(raceStr);
-                }
-            } catch(e) { race = {}; }
-
-            try {
-                const elemStr = localStorage.getItem('selectedElement');
-                if (elemStr && elemStr !== 'undefined' && elemStr !== 'null') {
-                    element = JSON.parse(elemStr);
-                }
-            } catch(e) { element = {}; }
-
-            const name = localStorage.getItem('playerName') || 'Герой';
-            const gender = localStorage.getItem('selectedGender') || 'male';
-            const px = localStorage.getItem('playerX') || 13;
-            const py = localStorage.getItem('playerY') || 13;
-
-            const saveData = {
-                name: name,
-                gender: gender,
-                race: (race && race.id) ? race.id : 'human',
-                raceName: (race && race.name) ? race.name : 'Человек',
-                element: (element && element.id) ? element.id : 'fire',
-                elementName: (element && element.name) ? element.name : 'Огонь',
-                stats: (race && race.stats) ? race.stats : {},
-                level: 1,
-                gold: 100,
-                hp: 100,
-                maxHp: 100,
-                mp: 50,
-                maxMp: 50,
-                playerX: parseInt(px),
-                playerY: parseInt(py),
-                citySelected: true,
-                currentScreen: typeof getCurrentScreen === 'function' ? getCurrentScreen() : 'city',
-                timestamp: new Date().toLocaleString('ru-RU'),
-            };
-
-            const response = await fetch(`/api/save/${slot}/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(saveData),
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                localStorage.setItem('activeSlot', slot);
-                const msg = document.getElementById('successMsg');
-                msg.classList.add('show');
-                setTimeout(() => msg.classList.remove('show'), 2000);
-                await renderSlots();
-            }
-        }
-
         async function loadSlot(slot) {
             const response = await fetch(`/api/load/${slot}/`);
             const result = await response.json();
 
-            console.log('Загружено из API:', result);
+            console.log('API ответ:', result);
 
             if (result.success && result.data) {
                 const data = result.data;
+                console.log('currentScreen из файла:', data.currentScreen);
 
                 // Активный слот
                 localStorage.setItem('activeSlot', slot);
@@ -241,27 +181,23 @@
                 localStorage.setItem('playerY', data.playerY || 13);
                 localStorage.setItem('citySelected', String(data.citySelected || false));
 
-                // Раса и стихия — сохраняем как строки + name
-                const raceId = data.race || 'human';
-                const raceName = data.raceName || 'Человек';
+                // Раса и стихия
                 localStorage.setItem('selectedRace', JSON.stringify({
-                    id: raceId,
-                    name: raceName,
+                    id: data.race || 'human',
+                    name: data.raceName || 'Человек',
                     stats: data.stats || {},
                     icon: '🧔'
                 }));
 
-                const elemId = data.element || 'fire';
-                const elemName = data.elementName || 'Огонь';
                 localStorage.setItem('selectedElement', JSON.stringify({
-                    id: elemId,
-                    name: elemName,
+                    id: data.element || 'fire',
+                    name: data.elementName || 'Огонь',
                     icon: '🔥'
                 }));
 
-                // Экран для восстановления
+                // Куда переходим?
                 const screen = data.currentScreen || 'city';
-                console.log('Восстанавливаю экран:', screen);
+                console.log('Экран для перехода:', screen);
 
                 const screenUrls = {
                     'map': '/map/',
@@ -271,7 +207,11 @@
                     'living_district': '/living-district/',
                 };
 
-                window.location.href = screenUrls[screen] || '/city/';
+                const url = screenUrls[screen] || '/city/';
+                console.log('URL:', url);
+                console.log('Сейчас перейду на:', url);
+
+                window.location.href = url;
             } else {
                 alert('Не удалось загрузить сохранение');
             }
@@ -290,6 +230,6 @@
 
         renderSlots();
     </script>
-    <script src="/static/js/autosave.js"></script>
+
 </body>
 </html>

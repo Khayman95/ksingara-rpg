@@ -73,7 +73,7 @@
         }
 
         function loadGame() {
-            alert('Загрузка игры — в разработке');
+            window.location.href = '/load-game/';
         }
 
         // Проверка, что сервер работает
@@ -82,5 +82,6 @@
             .then(data => console.log('Сервер:', data.message))
             .catch(err => console.log('Сервер не отвечает'));
     </script>
+
 </body>
 </html>
