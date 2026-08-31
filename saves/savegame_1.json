@@ -1,14 +1,24 @@
 {
-  "slot": 1,
   "name": "Khayman",
   "gender": "male",
-  "race": "human",
-  "raceName": "Человек",
-  "element": "plasma",
-  "elementName": "Плазма (Астралис)",
-  "stats": {},
-  "playerX": 7,
+  "race": "hardl",
+  "raceName": "Хардлы",
+  "element": "ice",
+  "elementName": "Лёд",
+  "stats": {
+    "strength": 14,
+    "agility": 12,
+    "intelligence": 14
+  },
+  "level": 1,
+  "gold": 100,
+  "hp": 100,
+  "maxHp": 100,
+  "mp": 50,
+  "maxMp": 50,
+  "playerX": 20,
   "playerY": 6,
   "citySelected": true,
-  "currentScreen": "city"
+  "currentScreen": "map",
+  "timestamp": "31.08.2026, 23:35:32"
 }

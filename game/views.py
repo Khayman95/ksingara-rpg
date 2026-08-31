@@ -251,7 +251,20 @@ def trade_district(request):
     return HttpResponse("Торговый район — скоро!")
 
 def admin_district(request):
-    return HttpResponse("Административный район — скоро!")
+    """Административный район — скоро!"""
+    return render(request, 'admin_district.html')
+
+def circle_of_access(request):
+    """Круг доступа (заглушка)"""
+    return HttpResponse("Кргу доступа — скоро!")
+
+def circle_of_greats(request):
+    """Круг Велиуих (заглушка)"""
+    return HttpResponse("Кргу Великих — скоро!")
+
+def circle_of_blades(request):
+    """Круг Клинков (заглушка)"""
+    return HttpResponse("Кргу Клинков — скоро!")
 
 def living_district(request):
     return HttpResponse("Жилой район — скоро!")

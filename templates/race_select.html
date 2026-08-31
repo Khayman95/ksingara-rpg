@@ -230,6 +230,7 @@
         });
 
         function showRacePopup(race) {
+            console.log('Клик по расе:', race);
             document.getElementById('popupName').textContent = race.name;
             document.getElementById('popupDesc').textContent = race.desc;
             document.getElementById('statStr').textContent = race.stats.strength;
@@ -241,6 +242,7 @@
             document.getElementById('popupBonus').textContent = '✨ ' + race.bonus;
 
             selectedRace = race;
+            console.log('selectedRace установлен:', selectedRace);
             document.getElementById('popupOverlay').classList.add('active');
         }
 
@@ -250,18 +252,30 @@
         }
 
         function confirmRace() {
-            // Подсвечиваем выбранную расу
+            console.log('confirmRace вызван, selectedRace =', selectedRace);
+
+            if (!selectedRace) {
+                alert('Раса не выбрана!');
+                return;
+            }
+
+            // Выделяем выбранную карточку
             document.querySelectorAll('.race-card').forEach(c => c.classList.remove('selected'));
             const cards = document.querySelectorAll('.race-card');
             const index = races.indexOf(selectedRace);
             if (index >= 0) cards[index].classList.add('selected');
 
-            document.getElementById('nextBtn').disabled = false;
-            closePopup();
-
-            // Сохраняем выбор (потом в API)
+            // Сохраняем в localStorage
             localStorage.setItem('selectedRace', JSON.stringify(selectedRace));
+            console.log('Раса сохранена:', selectedRace);
+
+            // Включаем кнопку "Далее"
+            document.getElementById('nextBtn').disabled = false;
+
+            // Закрываем попап (теперь в конце, после сохранения)
+            closePopup();
         }
+
 
         function goToElementSelect() {
             window.location.href = '/element-select/';
