@@ -1,4 +1,5 @@
 {
+  "slot": 1,
   "name": "Khayman",
   "gender": "male",
   "race": "hardl",
@@ -10,15 +11,8 @@
     "agility": 12,
     "intelligence": 14
   },
-  "level": 1,
-  "gold": 100,
-  "hp": 100,
-  "maxHp": 100,
-  "mp": 50,
-  "maxMp": 50,
   "playerX": 20,
   "playerY": 6,
   "citySelected": true,
-  "currentScreen": "map",
-  "timestamp": "31.08.2026, 23:35:32"
+  "currentScreen": "character"
 }

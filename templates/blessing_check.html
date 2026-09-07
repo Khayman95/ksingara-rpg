@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингар — Боевое благословение</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            color: #f0c040;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 25px;
+        }
+        .blessing-icon {
+            text-align: center;
+            font-size: 72px;
+            margin-bottom: 20px;
+        }
+        .info-card {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .info-label {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ff8844;
+        }
+        .requirement {
+            font-size: 13px;
+            color: #aaa;
+            margin-top: 10px;
+        }
+        .requirement.met {
+            color: #5e5;
+        }
+        .requirement.not-met {
+            color: #e55;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: background 0.2s;
+        }
+        .btn-get {
+            background: #cc6622;
+            color: white;
+        }
+        .btn-get:hover:not(:disabled) { background: #dd7733; }
+        .btn-get:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+        .btn-back {
+            background: #333;
+            color: #ccc;
+        }
+        .btn-back:hover { background: #444; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚔️ БОЕВОЕ БЛАГОСЛОВЕНИЕ</h1>
+        <p class="subtitle">Благословение для воинов, познавших искусство клинка</p>
+
+        <div class="blessing-icon">⚔️✨</div>
+
+        <div class="info-card">
+            <div class="info-label">Текущий уровень благословения</div>
+            <div class="info-value" id="blessingLevel">0</div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-label">Требование</div>
+            <div class="requirement" id="requirement">
+                Нужен навык оружия уровня 5+
+            </div>
+        </div>
+
+        <button class="btn btn-get" id="getBtn" disabled onclick="getBlessing()">
+            ✨ Получить благословение
+        </button>
+
+        <button class="btn btn-back" onclick="window.location.href='/circle-of-blades/'">
+            ← Вернуться в Круг Клинков
+        </button>
+    </div>
+
+    <script>
+        // Заглушка — потом будет API
+        const weaponSkillLevel = 3;  // Уровень навыка оружия (тест)
+        const blessingLevel = 0;
+
+        document.getElementById('blessingLevel').textContent = blessingLevel;
+
+        const req = document.getElementById('requirement');
+        if (weaponSkillLevel >= 5) {
+            req.textContent = '✅ Навык оружия уровня ' + weaponSkillLevel + ' — условие выполнено!';
+            req.className = 'requirement met';
+            document.getElementById('getBtn').disabled = false;
+        } else {
+            req.textContent = '❌ Нужен навык оружия уровня 5+. Сейчас: ' + weaponSkillLevel;
+            req.className = 'requirement not-met';
+        }
+
+        function getBlessing() {
+            alert('Благословение получено! (в разработке)');
+        }
+    </script>
+    <script src="/static/js/autosave.js"></script>
+    <script src="/static/js/navbar.js"></script>
+</body>
+</html>

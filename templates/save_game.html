@@ -241,6 +241,9 @@
                 localStorage.setItem('playerY', data.playerY || 13);
                 localStorage.setItem('citySelected', String(data.citySelected || false));
 
+                // После восстановления данных:
+                localStorage.setItem('lastScreen', screenUrls[screen] || '/city/');
+
                 // Раса и стихия — сохраняем как строки + name
                 const raceId = data.race || 'human';
                 const raceName = data.raceName || 'Человек';
@@ -267,9 +270,19 @@
                     'map': '/map/',
                     'city': '/city/',
                     'trade_district': '/trade-district/',
+                    'merchant': '/merchant/',
                     'admin_district': '/admin-district/',
                     'living_district': '/living-district/',
+                    'circle_of_blades': '/circle-of-blades/',
+                    'circle_of_greats': '/circle-of-greats/',
+                    'circle_of_access': '/circle-of-access/',
+                    'weapon_skills': '/weapon-skills/',
+                    'training_dummy': '/training-dummy/',
+                    'blessing_check': '/blessing-check/',
+                    'blessing_check_magic': '/blessing-check-magic/',
+                    'character': '/character/',
                 };
+
 
                 window.location.href = screenUrls[screen] || '/city/';
             } else {

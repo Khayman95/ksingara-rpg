@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингар — Торговый район</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            color: #f0c040;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .service-card {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .service-card:hover {
+            border-color: #44aa88;
+            background: #1e1e38;
+        }
+        .service-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+        .service-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+        .service-desc {
+            font-size: 13px;
+            color: #888;
+            margin-top: 5px;
+        }
+        .btn-back {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #333;
+            color: #ccc;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .btn-back:hover { background: #444; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 ТОРГОВЫЙ РАЙОН</h1>
+
+        <div class="service-card" onclick="window.location.href='/merchant/'">
+            <div class="service-icon">🛒</div>
+            <div class="service-name">Торговец</div>
+            <div class="service-desc">Купить обычные предметы, зелья, провиант</div>
+        </div>
+
+        <div class="service-card" onclick="window.location.href='/blacksmith/'">
+            <div class="service-icon">⚒️</div>
+            <div class="service-name">Кузнец</div>
+            <div class="service-desc">Купить и улучшить экипировку</div>
+        </div>
+
+        <div class="service-card" onclick="window.location.href='/black-market/'">
+            <div class="service-icon">🌑</div>
+            <div class="service-name">Чёрный рынок</div>
+            <div class="service-desc">Редкие предметы (обновление раз в день)</div>
+        </div>
+
+        <button class="btn-back" onclick="window.location.href='/city/'">← Вернуться в город</button>
+    </div>
+    <script src="/static/js/autosave.js"></script>
+    <script src="/static/js/navbar.js"></script>
+</body>
+</html>

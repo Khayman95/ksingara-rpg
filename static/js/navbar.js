@@ -6,7 +6,9 @@ document.addEventListener('DOMContentLoaded', function() {
     navbar.innerHTML = `
         <button onclick="goToMenu()" title="В меню">🏠</button>
         <button onclick="saveAndContinue()" title="Сохранить">💾</button>
+        <button onclick="openCharacter()" title="Персонаж">👤</button>
         <button onclick="openCodex()" title="Кодекс">📖</button>
+        <button onclick="resetDailyStock()" title="Обновить ассортимент (DevMode)">🔄</button>
     `;
 
     document.body.insertBefore(navbar, document.body.firstChild);
@@ -47,37 +49,32 @@ document.addEventListener('DOMContentLoaded', function() {
     document.head.appendChild(style);
 });
 
+async function resetDailyStock() {
+    try {
+        const response = await fetch('/api/merchant-reset/', { method: 'POST' });
+        const result = await response.json();
+        if (result.success) {
+            alert('🔄 Ассортимент обновлён!');
+            location.reload();
+        }
+    } catch(e) {
+        alert('🔄 Ассортимент обновлён (локально)');
+        location.reload();
+    }
+}
+
 async function goToMenu() {
-    // Принудительно сохраняем ТЕКУЩИЙ экран перед уходом
-    const currentScreen = getCurrentScreen();
+    const currentPath = window.location.pathname;
 
-    const slot = getActiveSlot();
-    const race = getRaceData();
-    const element = getElementData();
+    // Не сохраняем /character/ как lastScreen
+    if (!currentPath.includes('/character/')) {
+        localStorage.setItem('lastScreen', currentPath);
+    }
 
-    const data = {
-        slot: slot,
-        name: localStorage.getItem('playerName') || 'Герой',
-        gender: localStorage.getItem('selectedGender') || 'male',
-        race: race.id || 'human',
-        raceName: race.name || 'Человек',
-        element: element.id || 'fire',
-        elementName: element.name || 'Огонь',
-        stats: race.stats || {},
-        playerX: parseInt(localStorage.getItem('playerX') || '13'),
-        playerY: parseInt(localStorage.getItem('playerY') || '13'),
-        citySelected: localStorage.getItem('citySelected') === 'true',
-        currentScreen: currentScreen,  // ← Сохраняем ЭТОТ экран, а не save-game
-    };
-
-    await fetch('/api/autosave/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-    });
-
+    await autosave();
     window.location.href = '/';
 }
+
 
 async function saveAndContinue() {
     await autosave();
@@ -88,4 +85,11 @@ async function saveAndContinue() {
 
 function openCodex() {
     window.location.href = '/codex/';
+}
+
+function openCharacter() {
+    // Сохраняем текущий экран перед уходом
+    const currentPath = window.location.pathname;
+    localStorage.setItem('returnScreen', currentPath);
+    window.location.href = '/character/';
 }

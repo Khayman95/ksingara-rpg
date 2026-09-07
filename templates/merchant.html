@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингар — Торговец</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            color: #f0c040;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .merchant-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .merchant-icon {
+            font-size: 56px;
+        }
+        .merchant-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e0e0e0;
+            margin-top: 5px;
+        }
+        .reputation {
+            font-size: 13px;
+            color: #f0c040;
+            margin-top: 3px;
+        }
+        .gold-display {
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 10px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: #f0c040;
+            font-weight: bold;
+        }
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 13px;
+            color: #aaa;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            background: #2a2a4e;
+            color: #f0c040;
+            border-color: #f0c040;
+        }
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .item-card {
+            display: flex;
+            align-items: center;
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 8px;
+            padding: 12px;
+            gap: 10px;
+        }
+        .item-icon {
+            font-size: 28px;
+        }
+        .item-info {
+            flex-grow: 1;
+        }
+        .item-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+        .item-desc {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+        }
+        .item-price {
+            font-size: 13px;
+            color: #f0c040;
+            font-weight: bold;
+        }
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .btn-buy {
+            background: #2a6e2a;
+            color: white;
+        }
+        .btn-buy:hover:not(:disabled) { background: #358535; }
+        .btn-buy:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+        .btn-sell {
+            background: #8e6a2a;
+            color: white;
+        }
+        .btn-sell:hover { background: #9e7a3a; }
+        .btn-back {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #333;
+            color: #ccc;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .btn-back:hover { background: #444; }
+        .success-msg {
+            text-align: center;
+            color: #5e5;
+            font-size: 13px;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .success-msg.show { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="merchant-info">
+            <div class="merchant-icon">🛒</div>
+            <div class="merchant-name">Торговец Маркус</div>
+            <div class="reputation" id="reputationDisplay">Репутация: 0</div>
+        </div>
+
+        <div class="gold-display" id="goldDisplay">💰 100 золота</div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('buy')">Покупка</div>
+            <div class="tab" onclick="switchTab('sell')">Продажа</div>
+            <div class="tab" onclick="switchTab('reputation')">Репутация</div>
+        </div>
+
+        <div class="items-list" id="itemsList"></div>
+
+        <div class="success-msg" id="successMsg">✅ Операция выполнена!</div>
+
+        <button class="btn-back" onclick="window.location.href='/trade-district/'">← Вернуться в торговый район</button>
+    </div>
+
+    <script>
+        let playerGold = parseInt(localStorage.getItem('gold') || '100');
+        let reputation = parseInt(localStorage.getItem('merchantReputation') || '0');
+        let currentTab = 'buy';
+        let dailyStock = [];
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            renderItems();
+        }
+
+
+        // Загружаем ассортимент из API
+        async function loadStock() {
+            try {
+                const response = await fetch('/api/merchant-stock/');
+                const data = await response.json();
+                dailyStock = data.stock || [];
+                renderItems();
+            } catch(e) {
+                // Если API недоступен — заглушка
+                dailyStock = [
+                    { id: 1, name: 'Зелье здоровья', icon: '🧪', description: 'Восстанавливает 30 HP', price: 10, sold_out: false },
+                    { id: 2, name: 'Хлеб', icon: '🍞', description: 'Восстанавливает 10 HP', price: 3, sold_out: false },
+                ];
+                renderItems();
+            }
+        }
+
+        function renderItems() {
+            const container = document.getElementById('itemsList');
+            container.innerHTML = '';
+
+            if (currentTab === 'buy') {
+                if (dailyStock.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;color:#666;padding:20px;">Сегодня товаров нет</div>';
+                } else {
+                    dailyStock.forEach(item => {
+                        const soldOut = item.sold_out;
+                        const card = document.createElement('div');
+                        card.className = 'item-card';
+                        card.innerHTML = `
+                            <div class="item-icon">${item.icon}</div>
+                            <div class="item-info">
+                                <div class="item-name">${item.name} ${soldOut ? '(Продано)' : ''}</div>
+                                <div class="item-desc">${item.description || ''}</div>
+                            </div>
+                            <div class="item-price">${item.price}💰</div>
+                            <button class="btn btn-buy" ${soldOut || playerGold < item.price ? 'disabled' : ''} onclick="buyItem(${item.id}, ${item.price})">
+                                Купить
+                            </button>
+                        `;
+                        container.appendChild(card);
+                    });
+                }
+            } else if (currentTab === 'sell') {
+                // ... тот же код продажи ...
+            } else if (currentTab === 'reputation') {
+                // ... тот же код репутации ...
+            }
+        }
+
+        async function buyItem(stockId, price) {
+            if (playerGold >= price) {
+                // Ищем предмет в dailyStock
+                const item = dailyStock.find(i => i.id === stockId);
+                if (!item) return;
+
+                try {
+                    const response = await fetch('/api/merchant-buy/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ stock_id: stockId, item_name: item.name, item_icon: item.icon }),
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        playerGold -= price;
+                        reputation += 1;
+
+                        // Добавляем предмет в инвентарь
+                        addToInventory(item.name, item.icon);
+
+                        localStorage.setItem('gold', playerGold);
+                        localStorage.setItem('merchantReputation', reputation);
+                        updateGoldDisplay();
+                        showSuccess('✅ Куплено! Предмет в инвентаре');
+                        await loadStock();
+                    }
+                } catch(e) {
+                    // Локальная покупка
+                    playerGold -= price;
+                    reputation += 1;
+                    addToInventory(item.name, item.icon);
+                    localStorage.setItem('gold', playerGold);
+                    localStorage.setItem('merchantReputation', reputation);
+                    updateGoldDisplay();
+                    showSuccess('✅ Куплено! Предмет в инвентаре');
+                    renderItems();
+                }
+            }
+        }
+
+        function addToInventory(itemName, itemIcon, quantity = 1) {
+            let inventory = [];
+            try {
+                const raw = localStorage.getItem('inventory');
+                if (raw && raw !== 'undefined' && raw !== 'null') {
+                    inventory = JSON.parse(raw);
+                    if (!Array.isArray(inventory)) inventory = [];
+                    inventory = inventory.filter(item => typeof item === 'object');
+                }
+            } catch(e) { inventory = []; }
+
+            // Проверяем, есть ли уже такой предмет (для стака)
+            const existingIndex = inventory.findIndex(item => item.name === itemName);
+
+            if (existingIndex >= 0) {
+                // Увеличиваем количество
+                inventory[existingIndex].quantity = (inventory[existingIndex].quantity || 1) + quantity;
+            } else {
+                // Новый предмет
+                if (inventory.length >= 9) {
+                    showSuccess('⚠️ Инвентарь полон!');
+                    return false;
+                }
+                inventory.push({
+                    name: itemName,
+                    icon: itemIcon || '📦',
+                    quantity: quantity,
+                });
+            }
+
+            localStorage.setItem('inventory', JSON.stringify(inventory));
+            return true;
+        }
+
+        // Загружаем при открытии
+        loadStock();
+        updateGoldDisplay();
+
+        function sellItem(itemId, price) {
+            playerGold += price;
+            localStorage.setItem('gold', playerGold);
+            updateGoldDisplay();
+            showSuccess('✅ Продано!');
+            renderItems();
+        }
+
+        function updateGoldDisplay() {
+            document.getElementById('goldDisplay').textContent = `💰 ${playerGold} золота`;
+        }
+
+        function updateReputationDisplay() {
+            document.getElementById('reputationDisplay').textContent = `Репутация: ${reputation}`;
+        }
+
+        function showSuccess(msg) {
+            const el = document.getElementById('successMsg');
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 2000);
+        }
+    </script>
+    <script src="/static/js/autosave.js"></script>
+    <script src="/static/js/navbar.js"></script>
+</body>
+</html>

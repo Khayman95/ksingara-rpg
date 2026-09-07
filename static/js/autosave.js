@@ -59,10 +59,19 @@ function getElementData() {
 
 function getCurrentScreen() {
     const path = window.location.pathname;
+    if (path.includes('circle-of-blades')) return 'circle_of_blades';
+    if (path.includes('circle-of-greats')) return 'circle_of_greats';
+    if (path.includes('circle-of-access')) return 'circle_of_access';
+    if (path.includes('weapon-skills')) return 'weapon_skills';
+    if (path.includes('training-dummy')) return 'training_dummy';
+    if (path.includes('blessing-check-magic')) return 'blessing_check_magic';
+    if (path.includes('blessing-check')) return 'blessing_check';
     if (path.includes('map')) return 'map';
     if (path.includes('city')) return 'city';
     if (path.includes('trade-district')) return 'trade_district';
+    if (path.includes('merchant')) return 'merchant';
     if (path.includes('admin-district')) return 'admin_district';
     if (path.includes('living-district')) return 'living_district';
+    if (path.includes('character')) return 'character';
     return 'map';
 }

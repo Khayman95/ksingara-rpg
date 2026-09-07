@@ -6,7 +6,8 @@ from .db_utils import get_db_connection
 from .models import Player
 from datetime import datetime
 import json
-
+import random
+from datetime import date, datetime
 
 def api_status(request):
     """Проверка, что сервер работает"""
@@ -208,6 +209,104 @@ def api_autosave(request):
 
         return JsonResponse({'success': True, 'slot': active_slot})
 
+
+def get_daily_stock():
+    """Возвращает сегодняшний ассортимент торговца"""
+    from .db_utils import get_db_connection
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    today = date.today().isoformat()
+
+    # Проверяем, есть ли уже ассортимент на сегодня
+    cursor.execute("SELECT COUNT(*) FROM merchant_daily_stock WHERE stock_date = ?", (today,))
+    count = cursor.fetchone()[0]
+
+    if count == 0:
+        # Генерируем новый ассортимент
+        cursor.execute("SELECT * FROM merchant_items")
+        all_items = cursor.fetchall()
+
+        # Выбираем 4-6 случайных предметов
+        selected = random.sample(list(all_items), min(4, len(all_items)))
+
+        for item in selected:
+            # Цена колеблется ±30% от базовой
+            base = item['base_price']
+            variation = random.uniform(-0.3, 0.3)
+            price = max(item['min_price'], min(item['max_price'], int(base * (1 + variation))))
+
+            cursor.execute(
+                "INSERT INTO merchant_daily_stock (item_id, price, stock_date) VALUES (?, ?, ?)",
+                (item['id'], price, today)
+            )
+        conn.commit()
+
+    # Получаем сегодняшний ассортимент
+    cursor.execute('''
+        SELECT mds.id, mds.price, mds.sold_out, mi.name, mi.icon, mi.description
+        FROM merchant_daily_stock mds
+        JOIN merchant_items mi ON mds.item_id = mi.id
+        WHERE mds.stock_date = ?
+    ''', (today,))
+    stock = cursor.fetchall()
+    conn.close()
+
+    return [dict(item) for item in stock]
+
+
+def api_merchant_stock(request):
+    """API: ассортимент торговца"""
+    stock = get_daily_stock()
+    return JsonResponse({'stock': stock, 'date': date.today().isoformat()})
+
+
+@csrf_exempt
+def api_merchant_buy(request):
+    """API: купить предмет у торговца"""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        stock_id = data.get('stock_id')
+
+        from .db_utils import get_db_connection
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM merchant_daily_stock WHERE id = ?", (stock_id,))
+        item = cursor.fetchone()
+
+        if not item or item['sold_out']:
+            conn.close()
+            return JsonResponse({'success': False, 'message': 'Товар недоступен'})
+
+        # Здесь проверяем золото игрока и списываем
+        # Пока заглушка — просто отмечаем проданным
+        cursor.execute("UPDATE merchant_daily_stock SET sold_out = 1 WHERE id = ?", (stock_id,))
+        conn.commit()
+        conn.close()
+
+        return JsonResponse({'success': True, 'message': 'Предмет куплен!'})
+
+    return JsonResponse({'success': False, 'message': 'Неверный запрос'})
+
+@csrf_exempt
+def api_merchant_reset(request):
+    """Сбрасывает ассортимент торговца (для DevMode)"""
+    from .db_utils import get_db_connection
+    from datetime import date
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Удаляем сегодняшний ассортимент
+    today = date.today().isoformat()
+    cursor.execute("DELETE FROM merchant_daily_stock WHERE stock_date = ?", (today,))
+    conn.commit()
+    conn.close()
+
+    return JsonResponse({'success': True, 'message': 'Ассортимент сброшен'})
+
 def codex(request):
     """Кодекс (база знаний)"""
     return render(request, 'codex.html')
@@ -248,23 +347,49 @@ def city_view(request):
     return render(request, 'city.html')
 
 def trade_district(request):
-    return HttpResponse("Торговый район — скоро!")
+    """Торговый район"""
+    return render(request, 'trade_district.html')
 
 def admin_district(request):
-    """Административный район — скоро!"""
+    """Административный район"""
     return render(request, 'admin_district.html')
 
 def circle_of_access(request):
-    """Круг доступа (заглушка)"""
-    return HttpResponse("Кргу доступа — скоро!")
+    """Круг доступа"""
+    return render(request, 'circle_of_access.html')
 
 def circle_of_greats(request):
-    """Круг Велиуих (заглушка)"""
-    return HttpResponse("Кргу Великих — скоро!")
+    """Круг Великих"""
+    return render(request, 'circle_of_greats.html')
 
 def circle_of_blades(request):
-    """Круг Клинков (заглушка)"""
-    return HttpResponse("Кргу Клинков — скоро!")
+    """Круг Клинков"""
+    return render(request, 'circle_of_blades.html')
+
+def weapon_skills(request):
+    """Изучение навыков оружия"""
+    return render(request, 'weapon_skills.html')
+
+def training_dummy(request):
+    """Тренировочный манекен"""
+    return render(request, 'training_dummy.html')
+
+def blessing_check(request):
+    """Боевое благословение (Круг Клинков)"""
+    return render(request, 'blessing_check.html')
+
+def blessing_check_magic(request):
+    """Магическое благословение (Круг Великих)"""
+    return render(request, 'blessing_check_magic.html')
 
 def living_district(request):
-    return HttpResponse("Жилой район — скоро!")
+    """Жилой район"""
+    return render(request, 'living_district.html')
+
+def merchant(request):
+    """Торговец"""
+    return render(request, 'merchant.html')
+
+def character(request):
+    """Экран персонажа"""
+    return render(request, 'character.html')

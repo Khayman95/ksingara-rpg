@@ -11,4 +11,7 @@ urlpatterns = [
     path('saves/', views.api_all_saves, name='api_all_saves'),
     path('delete-save/<int:slot>/', views.api_delete_save, name='api_delete_save'),
     path('autosave/', views.api_autosave, name='api_autosave'),
+    path('merchant-stock/', views.api_merchant_stock, name='api_merchant_stock'),
+    path('merchant-buy/', views.api_merchant_buy, name='api_merchant_buy'),
+    path('merchant-reset/', views.api_merchant_reset, name='api_merchant_reset'),
 ]

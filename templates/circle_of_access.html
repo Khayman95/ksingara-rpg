@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингар — Круг доступа</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            color: #f0c040;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+        .service-card {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .service-card:hover {
+            border-color: #6644cc;
+            background: #1e1e38;
+        }
+        .service-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+        .service-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+        .service-desc {
+            font-size: 13px;
+            color: #888;
+            margin-top: 5px;
+        }
+        .btn-back {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #333;
+            color: #ccc;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .btn-back:hover { background: #444; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔮 КРУГ ДОСТУПА</h1>
+        <p class="subtitle">Место, где решается судьба Запредельщиков.</p>
+
+        <div class="service-card" onclick="window.location.href='/sell-items/'">
+            <div class="service-icon">💰</div>
+            <div class="service-name">Продажа предметов</div>
+            <div class="service-desc">Продать найденные артефакты и ресурсы</div>
+        </div>
+
+        <div class="service-card" onclick="window.location.href='/join-beyonders/'">
+            <div class="service-icon">⚔️</div>
+            <div class="service-name">Вступление в Запредельщики</div>
+            <div class="service-desc">Присягнуть и получить доступ к заданиям</div>
+        </div>
+
+        <div class="service-card" onclick="window.location.href='/beyond-barrier/'">
+            <div class="service-icon">🚪</div>
+            <div class="service-name">Выход за барьер</div>
+            <div class="service-desc">Только для Хранителей (эндгейм)</div>
+        </div>
+
+        <button class="btn-back" onclick="window.location.href='/admin-district/'">← Вернуться в район</button>
+    </div>
+    <script src="/static/js/autosave.js"></script>
+    <script src="/static/js/navbar.js"></script>
+</body>
+</html>
