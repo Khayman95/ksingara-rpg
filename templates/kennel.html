@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингар — Питомник</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            color: #88dd88;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+        .gold-display {
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 10px 20px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: #f0c040;
+            font-weight: bold;
+        }
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
+            color: #aaa;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            background: #1a3a1a;
+            color: #88dd88;
+            border-color: #88dd88;
+        }
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .item-card {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .item-icon {
+            font-size: 28px;
+        }
+        .item-info {
+            flex-grow: 1;
+        }
+        .item-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+        .item-desc {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+        }
+        .item-price {
+            font-size: 13px;
+            color: #f0c040;
+            font-weight: bold;
+        }
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .btn-buy {
+            background: #2a6e2a;
+            color: white;
+        }
+        .btn-buy:hover:not(:disabled) { background: #358535; }
+        .btn-buy:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+        .btn-grow {
+            background: #8e6a2a;
+            color: white;
+        }
+        .btn-grow:hover:not(:disabled) { background: #9e7a3a; }
+        .btn-train {
+            background: #6e2a8e;
+            color: white;
+        }
+        .btn-train:hover:not(:disabled) { background: #7e3a9e; }
+        .btn-back {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #333;
+            color: #ccc;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .btn-back:hover { background: #444; }
+        .success-msg {
+            text-align: center;
+            color: #5e5;
+            font-size: 13px;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .success-msg.show { opacity: 1; }
+        .pet-display {
+            background: #1a1a2e;
+            border: 2px solid #2a4a2a;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .pet-icon {
+            font-size: 72px;
+        }
+        .pet-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #88dd88;
+            margin-top: 10px;
+        }
+        .pet-stats {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+        .pet-level {
+            font-size: 14px;
+            color: #f0c040;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐾 ПИТОМНИК</h1>
+        <p class="subtitle">Вырасти верного напарника</p>
+
+        <div class="gold-display" id="goldDisplay">💰 100 золота</div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('pet')">🐾 Мой питомец</div>
+            <div class="tab" onclick="switchTab('food')">🍖 Еда</div>
+            <div class="tab" onclick="switchTab('grow')">🥚 Вырастить</div>
+        </div>
+
+        <div class="items-list" id="itemsList"></div>
+
+        <div class="success-msg" id="successMsg">✅ Готово!</div>
+
+        <button class="btn-back" onclick="window.location.href='/living-district/'">← Вернуться в жилой район</button>
+    </div>
+
+    <script>
+        let playerGold = parseInt(localStorage.getItem('gold') || '100');
+        let currentTab = 'pet';
+        let pet = JSON.parse(localStorage.getItem('pet') || 'null');
+
+        const petFoods = [
+            { id: 'meat', name: 'Кусок мяса', icon: '🍖', desc: '+10 опыта питомцу', price: 5, exp: 10 },
+            { id: 'fish', name: 'Свежая рыба', icon: '🐟', desc: '+20 опыта питомцу', price: 10, exp: 20 },
+            { id: 'premium', name: 'Премиум-корм', icon: '🥩', desc: '+50 опыта питомцу', price: 25, exp: 50 },
+        ];
+
+        const petEggs = [
+            { id: 'wolf_egg', name: 'Яйцо волка', icon: '🥚', desc: 'Верный волк-напарник', price: 100, petIcon: '🐺', petName: 'Волк' },
+            { id: 'cat_egg', name: 'Яйцо кота', icon: '🥚', desc: 'Ловкий кот-напарник', price: 80, petIcon: '🐱', petName: 'Кот' },
+            { id: 'dragon_egg', name: 'Яйцо дракона', icon: '🥚', desc: 'Мощный дракон-напарник', price: 500, petIcon: '🐉', petName: 'Дракон' },
+        ];
+
+        updateGoldDisplay();
+        renderItems();
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            renderItems();
+        }
+
+        function renderItems() {
+            const container = document.getElementById('itemsList');
+            container.innerHTML = '';
+
+            if (currentTab === 'pet') {
+                if (!pet) {
+                    container.innerHTML = `
+                        <div style="text-align:center;padding:30px;color:#666;">
+                            <div style="font-size:48px;">🥚</div>
+                            <div style="margin-top:15px;">У тебя ещё нет питомца</div>
+                            <div style="font-size:12px;margin-top:5px;">Купи яйцо во вкладке "Вырастить"</div>
+                        </div>
+                    `;
+                } else {
+                    const expToNext = pet.level * 100;
+                    container.innerHTML = `
+                        <div class="pet-display">
+                            <div class="pet-icon">${pet.icon}</div>
+                            <div class="pet-name">${pet.name}</div>
+                            <div class="pet-level">Уровень ${pet.level}</div>
+                            <div class="pet-stats">Опыт: ${pet.exp}/${expToNext}</div>
+                            <div class="pet-stats">❤️ HP: ${pet.hp} | ⚔️ Урон: ${pet.damage}</div>
+                        </div>
+                    `;
+                }
+            } else if (currentTab === 'food') {
+                if (!pet) {
+                    container.innerHTML = '<div style="text-align:center;color:#666;padding:20px;">Сначала заведи питомца</div>';
+                } else {
+                    petFoods.forEach(food => {
+                        const card = document.createElement('div');
+                        card.className = 'item-card';
+                        card.innerHTML = `
+                            <div class="item-icon">${food.icon}</div>
+                            <div class="item-info">
+                                <div class="item-name">${food.name}</div>
+                                <div class="item-desc">${food.desc}</div>
+                            </div>
+                            <div class="item-price">${food.price}💰</div>
+                            <button class="btn btn-buy" ${playerGold < food.price ? 'disabled' : ''} onclick="buyFood('${food.id}')">
+                                Купить
+                            </button>
+                        `;
+                        container.appendChild(card);
+                    });
+                }
+            } else if (currentTab === 'grow') {
+                if (pet) {
+                    container.innerHTML = '<div style="text-align:center;color:#666;padding:20px;">У тебя уже есть питомец</div>';
+                } else {
+                    petEggs.forEach(egg => {
+                        const card = document.createElement('div');
+                        card.className = 'item-card';
+                        card.innerHTML = `
+                            <div class="item-icon">${egg.icon}</div>
+                            <div class="item-info">
+                                <div class="item-name">${egg.name}</div>
+                                <div class="item-desc">${egg.desc}</div>
+                            </div>
+                            <div class="item-price">${egg.price}💰</div>
+                            <button class="btn btn-grow" ${playerGold < egg.price ? 'disabled' : ''} onclick="growPet('${egg.id}')">
+                                Купить
+                            </button>
+                        `;
+                        container.appendChild(card);
+                    });
+                }
+            }
+        }
+
+        function buyFood(foodId) {
+            const food = petFoods.find(f => f.id === foodId);
+            if (!food || !pet) return;
+            if (playerGold < food.price) return;
+
+            playerGold -= food.price;
+            pet.exp += food.exp;
+
+            // Проверка повышения уровня
+            const expToNext = pet.level * 100;
+            if (pet.exp >= expToNext) {
+                pet.level += 1;
+                pet.exp -= expToNext;
+                pet.hp += 20;
+                pet.damage += 5;
+                showSuccess(`🎉 Питомец вырос до уровня ${pet.level}!`);
+            } else {
+                showSuccess(`✅ ${pet.name} поел (+${food.exp} опыта)`);
+            }
+
+            savePet();
+            updateGoldDisplay();
+            renderItems();
+        }
+
+        function growPet(eggId) {
+            const egg = petEggs.find(e => e.id === eggId);
+            if (!egg) return;
+            if (playerGold < egg.price) return;
+
+            playerGold -= egg.price;
+            pet = {
+                id: egg.id,
+                name: egg.petName,
+                icon: egg.petIcon,
+                level: 1,
+                exp: 0,
+                hp: 50,
+                damage: 10,
+            };
+
+            savePet();
+            updateGoldDisplay();
+            showSuccess(`🎉 У тебя появился ${pet.name}!`);
+            switchTab('pet');
+        }
+
+        function savePet() {
+            localStorage.setItem('pet', JSON.stringify(pet));
+            localStorage.setItem('gold', playerGold);
+        }
+
+        function updateGoldDisplay() {
+            document.getElementById('goldDisplay').textContent = `💰 ${playerGold} золота`;
+        }
+
+        function showSuccess(msg) {
+            const el = document.getElementById('successMsg');
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 2500);
+        }
+    </script>
+    <script src="/static/js/autosave.js"></script>
+    <script src="/static/js/navbar.js"></script>
+</body>
+</html>

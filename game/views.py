@@ -171,7 +171,6 @@ def api_delete_save(request, slot):
     except:
         return JsonResponse({'success': False})
 
-
 @csrf_exempt
 def api_autosave(request):
     """Автосохранение текущего состояния"""
@@ -208,7 +207,6 @@ def api_autosave(request):
             json.dump(data, f, ensure_ascii=False, indent=2)
 
         return JsonResponse({'success': True, 'slot': active_slot})
-
 
 def get_daily_stock():
     """Возвращает сегодняшний ассортимент торговца"""
@@ -255,12 +253,10 @@ def get_daily_stock():
 
     return [dict(item) for item in stock]
 
-
 def api_merchant_stock(request):
     """API: ассортимент торговца"""
     stock = get_daily_stock()
     return JsonResponse({'stock': stock, 'date': date.today().isoformat()})
-
 
 @csrf_exempt
 def api_merchant_buy(request):
@@ -307,6 +303,196 @@ def api_merchant_reset(request):
 
     return JsonResponse({'success': True, 'message': 'Ассортимент сброшен'})
 
+def api_blacksmith_recipes(request):
+    """API: список рецептов кузнеца"""
+    from .db_utils import get_db_connection
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        SELECT br.*, 
+               (SELECT GROUP_CONCAT(ri.item_name || ' x' || ri.quantity) 
+                FROM recipe_ingredients ri 
+                WHERE ri.recipe_id = br.id) as ingredients
+        FROM blacksmith_recipes br
+    ''')
+    recipes = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+
+    return JsonResponse({'recipes': recipes})
+
+@csrf_exempt
+def api_blacksmith_craft(request):
+    """API: изготовить предмет"""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        recipe_id = data.get('recipe_id')
+
+        from .db_utils import get_db_connection
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM blacksmith_recipes WHERE id = ?", (recipe_id,))
+        recipe = cursor.fetchone()
+
+        if not recipe:
+            conn.close()
+            return JsonResponse({'success': False, 'message': 'Рецепт не найден'})
+
+        conn.close()
+
+        return JsonResponse({
+            'success': True,
+            'message': f"Изготовлено: {recipe['result_item']}",
+            'result_icon': recipe['result_icon'],
+            'result_item': recipe['result_item'],
+        })
+
+    return JsonResponse({'success': False, 'message': 'Неверный запрос'})
+
+@csrf_exempt
+def api_blacksmith_learn_recipe(request):
+    """API: изучить рецепт"""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        recipe_id = data.get('recipe_id')
+
+        from .db_utils import get_db_connection
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM blacksmith_recipes WHERE id = ?", (recipe_id,))
+        recipe = cursor.fetchone()
+        conn.close()
+
+        if recipe:
+            return JsonResponse({
+                'success': True,
+                'message': f"Рецепт изучен: {recipe['name']}",
+                'recipe_name': recipe['name'],
+            })
+
+    return JsonResponse({'success': False, 'message': 'Неверный запрос'})
+
+def api_world_market(request):
+    """API: товары на мировом рынке"""
+    from .db_utils import get_db_connection
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT * FROM world_market 
+        WHERE sold = 0 
+        ORDER BY created_at DESC
+    ''')
+    items = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+
+    return JsonResponse({'items': items})
+
+@csrf_exempt
+def api_world_market_sell(request):
+    """API: выставить предмет на мировой рынок"""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+
+        from .db_utils import get_db_connection
+        from datetime import datetime
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            INSERT INTO world_market (seller_name, item_name, item_icon, price, currency, quantity, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            data.get('seller_name', 'Игрок'),
+            data.get('item_name'),
+            data.get('item_icon', '📦'),
+            data.get('price', 10),
+            data.get('currency', 'gold'),
+            data.get('quantity', 1),
+            datetime.now().strftime("%d.%m.%Y %H:%M")
+        ))
+        conn.commit()
+        conn.close()
+
+        return JsonResponse({'success': True, 'message': 'Предмет выставлен на рынок'})
+
+@csrf_exempt
+def api_world_market_buy(request):
+    """API: купить предмет с мирового рынка"""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        market_id = data.get('market_id')
+
+        from .db_utils import get_db_connection
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM world_market WHERE id = ?", (market_id,))
+        item = cursor.fetchone()
+
+        if not item or item['sold']:
+            conn.close()
+            return JsonResponse({'success': False, 'message': 'Товар недоступен'})
+
+        cursor.execute("UPDATE world_market SET sold = 1 WHERE id = ?", (market_id,))
+        conn.commit()
+        conn.close()
+
+        return JsonResponse({
+            'success': True,
+            'message': f"Куплено: {item['item_name']}",
+            'item_name': item['item_name'],
+            'item_icon': item['item_icon'],
+        })
+
+def api_currencies(request):
+    """API: курсы валют"""
+    from .db_utils import get_db_connection
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM currencies")
+    currencies = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+
+    return JsonResponse({'currencies': currencies})
+
+@csrf_exempt
+def api_exchange_currency(request):
+    """API: обмен валюты"""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        from_currency = data.get('from')
+        to_currency = data.get('to')
+        amount = data.get('amount', 0)
+
+        from .db_utils import get_db_connection
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM currencies WHERE id IN (?, ?)", (from_currency, to_currency))
+        rates = {row['id']: row['rate_to_gold'] for row in cursor.fetchall()}
+        conn.close()
+
+        if from_currency not in rates or to_currency not in rates:
+            return JsonResponse({'success': False, 'message': 'Неверная валюта'})
+
+        # Расчёт: amount * rate_from / rate_to
+        result = amount * rates[from_currency] / rates[to_currency]
+
+        return JsonResponse({
+            'success': True,
+            'from_amount': amount,
+            'to_amount': round(result, 2),
+            'message': f"Обменяно {amount} на {round(result, 2)}"
+        })
+
+    return JsonResponse({'success': False, 'message': 'Неверный запрос'})
+
 def codex(request):
     """Кодекс (база знаний)"""
     return render(request, 'codex.html')
@@ -350,6 +536,14 @@ def trade_district(request):
     """Торговый район"""
     return render(request, 'trade_district.html')
 
+def blacksmith(request):
+    """Кузнец"""
+    return render(request, 'blacksmith.html')
+
+def black_market(request):
+    """Чёрный рынок"""
+    return render(request, 'black_market.html')
+
 def admin_district(request):
     """Административный район"""
     return render(request, 'admin_district.html')
@@ -385,6 +579,18 @@ def blessing_check_magic(request):
 def living_district(request):
     """Жилой район"""
     return render(request, 'living_district.html')
+
+def tavern(request):
+    """Таверна"""
+    return render(request, 'tavern.html')
+
+def brothel(request):
+    """Бордель"""
+    return render(request, 'brothel.html')
+
+def kennel(request):
+    """Питомник"""
+    return render(request, 'kennel.html')
 
 def merchant(request):
     """Торговец"""

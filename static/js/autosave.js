@@ -73,5 +73,10 @@ function getCurrentScreen() {
     if (path.includes('admin-district')) return 'admin_district';
     if (path.includes('living-district')) return 'living_district';
     if (path.includes('character')) return 'character';
+    if (path.includes('blacksmith')) return 'blacksmith';
+    if (path.includes('black-market')) return 'black_market';
+    if (path.includes('tavern')) return 'tavern';
+    if (path.includes('brothel')) return 'brothel';
+    if (path.includes('kennel')) return 'kennel';
     return 'map';
 }

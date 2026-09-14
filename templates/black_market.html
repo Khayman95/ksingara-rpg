@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингар — Чёрный рынок</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            color: #cc88ff;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+        .gold-display {
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 10px 20px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: #f0c040;
+            font-weight: bold;
+        }
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
+            color: #aaa;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            background: #2a1a3e;
+            color: #cc88ff;
+            border-color: #cc88ff;
+        }
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .item-card {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .item-icon {
+            font-size: 28px;
+        }
+        .item-info {
+            flex-grow: 1;
+        }
+        .item-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+        .item-seller {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+        }
+        .item-price {
+            font-size: 13px;
+            color: #f0c040;
+            font-weight: bold;
+        }
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-buy {
+            background: #6a2a8e;
+            color: white;
+        }
+        .btn-buy:hover { background: #7a3a9e; }
+        .btn-sell {
+            background: #8e6a2a;
+            color: white;
+        }
+        .btn-exchange {
+            background: #2a8e6a;
+            color: white;
+        }
+        .btn-back {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #333;
+            color: #ccc;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .btn-back:hover { background: #444; }
+        .success-msg {
+            text-align: center;
+            color: #5e5;
+            font-size: 13px;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .success-msg.show { opacity: 1; }
+        .exchange-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: #1a1a2e;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .exchange-row input, .exchange-row select {
+            background: #0a0a0f;
+            border: 1px solid #2a2a4e;
+            border-radius: 6px;
+            padding: 8px;
+            color: #e0e0e0;
+            font-size: 13px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌑 ЧЁРНЫЙ РЫНОК</h1>
+        <p class="subtitle">Товары со всего мира. Без лишних вопросов.</p>
+
+        <div class="gold-display" id="goldDisplay">💰 100 золота</div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('buy')">Купить</div>
+            <div class="tab" onclick="switchTab('sell')">Продать</div>
+            <div class="tab" onclick="switchTab('exchange')">Обмен</div>
+        </div>
+
+        <div class="items-list" id="itemsList"></div>
+        <div id="exchangeForm" style="display:none;"></div>
+
+        <div class="success-msg" id="successMsg">✅ Готово!</div>
+
+        <button class="btn-back" onclick="window.location.href='/trade-district/'">← Вернуться в торговый район</button>
+    </div>
+
+    <script>
+        let playerGold = parseInt(localStorage.getItem('gold') || '100');
+        let currentTab = 'buy';
+        let marketItems = [];
+        let currencies = [];
+
+        updateGoldDisplay();
+        loadMarket();
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            renderItems();
+        }
+
+        async function loadMarket() {
+            try {
+                const response = await fetch('/api/world-market/');
+                const data = await response.json();
+                marketItems = data.items || [];
+
+                const currResp = await fetch('/api/currencies/');
+                const currData = await currResp.json();
+                currencies = currData.currencies || [];
+            } catch(e) {
+                // Заглушка
+                marketItems = [
+                    { id: 1, seller_name: 'Торговец Артур', item_name: 'Редкое зелье', item_icon: '🧪', price: 50, currency: 'gold', quantity: 3 },
+                    { id: 2, seller_name: 'Маг Элрик', item_name: 'Свиток телепорта', item_icon: '📜', price: 5, currency: 'crystal', quantity: 2 },
+                ];
+                currencies = [
+                    { id: 'gold', name: 'Золото', icon: '💰', rate_to_gold: 1.0 },
+                    { id: 'crystal', name: 'Кристаллы', icon: '💎', rate_to_gold: 10.0 },
+                ];
+            }
+            renderItems();
+        }
+
+        function renderItems() {
+            const container = document.getElementById('itemsList');
+            const exchangeForm = document.getElementById('exchangeForm');
+            container.innerHTML = '';
+            exchangeForm.style.display = 'none';
+
+            if (currentTab === 'buy') {
+                if (marketItems.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;color:#666;padding:20px;">Рынок пуст</div>';
+                } else {
+                    marketItems.forEach(item => {
+                        const currencyIcon = getCurrencyIcon(item.currency);
+                        const card = document.createElement('div');
+                        card.className = 'item-card';
+                        card.innerHTML = `
+                            <div class="item-icon">${item.item_icon}</div>
+                            <div class="item-info">
+                                <div class="item-name">${item.item_name}</div>
+                                <div class="item-seller">Продавец: ${item.seller_name}</div>
+                            </div>
+                            <div class="item-price">${item.price}${currencyIcon}</div>
+                            <button class="btn btn-buy" onclick="buyItem(${item.id}, '${item.item_name}', '${item.item_icon}', ${item.price}, '${item.currency}')">
+                                Купить
+                            </button>
+                        `;
+                        container.appendChild(card);
+                    });
+                }
+            } else if (currentTab === 'sell') {
+                const inventory = JSON.parse(localStorage.getItem('inventory') || '[]');
+                if (inventory.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;color:#666;padding:20px;">Инвентарь пуст</div>';
+                } else {
+                    inventory.forEach((item, idx) => {
+                        const card = document.createElement('div');
+                        card.className = 'item-card';
+                        card.innerHTML = `
+                            <div class="item-icon">${item.icon || '📦'}</div>
+                            <div class="item-info">
+                                <div class="item-name">${item.name}</div>
+                                <div class="item-seller">Кол-во: ${item.quantity || 1}</div>
+                            </div>
+                            <button class="btn btn-sell" onclick="sellItem(${idx})">
+                                Выставить (20💰)
+                            </button>
+                        `;
+                        container.appendChild(card);
+                    });
+                }
+            } else if (currentTab === 'exchange') {
+                container.innerHTML = '';
+                exchangeForm.style.display = 'block';
+                exchangeForm.innerHTML = `
+                    <div class="exchange-row">
+                        <input type="number" id="exchangeAmount" placeholder="Кол-во" value="10" min="1">
+                        <select id="fromCurrency">
+                            ${currencies.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('')}
+                        </select>
+                        <span>→</span>
+                        <select id="toCurrency">
+                            ${currencies.map(c => `<option value="${c.id}" ${c.id === 'crystal' ? 'selected' : ''}>${c.icon} ${c.name}</option>`).join('')}
+                        </select>
+                    </div>
+                    <button class="btn btn-exchange" style="width:100%;padding:12px;" onclick="exchangeCurrency()">
+                        Обменять
+                    </button>
+                `;
+            }
+        }
+
+        function getCurrencyIcon(currencyId) {
+            const curr = currencies.find(c => c.id === currencyId);
+            return curr ? curr.icon : '💰';
+        }
+
+        async function buyItem(marketId, name, icon, price, currency) {
+            if (currency !== 'gold') {
+                showSuccess('⚠️ Только за золото (пока)');
+                return;
+            }
+
+            if (playerGold < price) {
+                showSuccess('❌ Недостаточно золота!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/world-market-buy/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ market_id: marketId }),
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    playerGold -= price;
+                    localStorage.setItem('gold', playerGold);
+
+                    // Добавляем в инвентарь
+                    let inventory = JSON.parse(localStorage.getItem('inventory') || '[]');
+                    const existing = inventory.findIndex(i => i.name === name);
+                    if (existing >= 0) {
+                        inventory[existing].quantity = (inventory[existing].quantity || 1) + 1;
+                    } else if (inventory.length < 9) {
+                        inventory.push({ name: name, icon: icon, quantity: 1 });
+                    }
+                    localStorage.setItem('inventory', JSON.stringify(inventory));
+
+                    updateGoldDisplay();
+                    showSuccess(`✅ ${result.message}`);
+                    await loadMarket();
+                }
+            } catch(e) {
+                showSuccess('❌ Ошибка');
+            }
+        }
+
+        async function sellItem(index) {
+            let inventory = JSON.parse(localStorage.getItem('inventory') || '[]');
+            const item = inventory[index];
+            if (!item) return;
+
+            try {
+                await fetch('/api/world-market-sell/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        item_name: item.name,
+                        item_icon: item.icon,
+                        price: 20,
+                        currency: 'gold',
+                        quantity: 1,
+                    }),
+                });
+
+                // Убираем из инвентаря
+                if (item.quantity > 1) {
+                    item.quantity -= 1;
+                } else {
+                    inventory.splice(index, 1);
+                }
+                localStorage.setItem('inventory', JSON.stringify(inventory));
+
+                showSuccess('✅ Предмет выставлен на рынок!');
+                renderItems();
+            } catch(e) {
+                showSuccess('❌ Ошибка');
+            }
+        }
+
+        async function exchangeCurrency() {
+            const amount = parseInt(document.getElementById('exchangeAmount').value);
+            const from = document.getElementById('fromCurrency').value;
+            const to = document.getElementById('toCurrency').value;
+
+            if (from === to) {
+                showSuccess('⚠️ Выбери разные валюты');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/exchange-currency/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ from, to, amount }),
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showSuccess(`✅ ${result.message}`);
+                }
+            } catch(e) {
+                showSuccess('❌ Ошибка обмена');
+            }
+        }
+
+        function updateGoldDisplay() {
+            document.getElementById('goldDisplay').textContent = `💰 ${playerGold} золота`;
+        }
+
+        function showSuccess(msg) {
+            const el = document.getElementById('successMsg');
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 2500);
+        }
+    </script>
+    <script src="/static/js/autosave.js"></script>
+    <script src="/static/js/navbar.js"></script>
+</body>
+</html>

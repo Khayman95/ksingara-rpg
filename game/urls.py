@@ -14,4 +14,12 @@ urlpatterns = [
     path('merchant-stock/', views.api_merchant_stock, name='api_merchant_stock'),
     path('merchant-buy/', views.api_merchant_buy, name='api_merchant_buy'),
     path('merchant-reset/', views.api_merchant_reset, name='api_merchant_reset'),
+    path('blacksmith-recipes/', views.api_blacksmith_recipes, name='api_blacksmith_recipes'),
+    path('blacksmith-craft/', views.api_blacksmith_craft, name='api_blacksmith_craft'),
+    path('blacksmith-learn/', views.api_blacksmith_learn_recipe, name='api_blacksmith_learn_recipe'),
+    path('world-market/', views.api_world_market, name='api_world_market'),
+    path('world-market-sell/', views.api_world_market_sell, name='api_world_market_sell'),
+    path('world-market-buy/', views.api_world_market_buy, name='api_world_market_buy'),
+    path('currencies/', views.api_currencies, name='api_currencies'),
+    path('exchange-currency/', views.api_exchange_currency, name='api_exchange_currency'),
 ]

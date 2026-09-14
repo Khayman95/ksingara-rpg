@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингар — Кузнец</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            color: #f0c040;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .blacksmith-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .blacksmith-icon {
+            font-size: 56px;
+        }
+        .blacksmith-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #e0e0e0;
+            margin-top: 5px;
+        }
+        .reputation {
+            font-size: 13px;
+            color: #f0c040;
+            margin-top: 3px;
+        }
+        .gold-display {
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 10px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+            color: #f0c040;
+            font-weight: bold;
+        }
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
+            color: #aaa;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            background: #2a2a4e;
+            color: #f0c040;
+            border-color: #f0c040;
+        }
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .item-card {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .item-icon {
+            font-size: 28px;
+        }
+        .item-info {
+            flex-grow: 1;
+        }
+        .item-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+        .item-desc {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+        }
+        .ingredients {
+            font-size: 10px;
+            color: #666;
+            margin-top: 3px;
+        }
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .btn-craft {
+            background: #cc6622;
+            color: white;
+        }
+        .btn-craft:hover { background: #dd7733; }
+        .btn-learn {
+            background: #2a5a8e;
+            color: white;
+        }
+        .btn-learn:hover { background: #356a9e; }
+        .btn-back {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #333;
+            color: #ccc;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .btn-back:hover { background: #444; }
+        .success-msg {
+            text-align: center;
+            color: #5e5;
+            font-size: 13px;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .success-msg.show { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="blacksmith-info">
+            <div class="blacksmith-icon">⚒️</div>
+            <div class="blacksmith-name">Кузнец Торин</div>
+            <div class="reputation" id="reputationDisplay">Репутация: 0</div>
+        </div>
+
+        <div class="gold-display" id="goldDisplay">💰 100 золота</div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('craft')">⚒️ Изготовить</div>
+            <div class="tab" onclick="switchTab('recipes')">📜 Рецепты</div>
+            <div class="tab" onclick="switchTab('reputation')">⭐ Репутация</div>
+        </div>
+
+        <div class="items-list" id="itemsList"></div>
+
+        <div class="success-msg" id="successMsg">✅ Готово!</div>
+
+        <button class="btn-back" onclick="window.location.href='/trade-district/'">← Вернуться в торговый район</button>
+    </div>
+
+    <script>
+        let playerGold = parseInt(localStorage.getItem('gold') || '100');
+        let reputation = parseInt(localStorage.getItem('blacksmithReputation') || '0');
+        let currentTab = 'craft';
+        let knownRecipes = JSON.parse(localStorage.getItem('knownRecipes') || '[]');
+        let allRecipes = [];
+
+        updateGoldDisplay();
+        updateReputationDisplay();
+        loadRecipes();
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            renderItems();
+        }
+
+        async function loadRecipes() {
+            try {
+                const response = await fetch('/api/blacksmith-recipes/');
+                const data = await response.json();
+                allRecipes = data.recipes || [];
+            } catch(e) {
+                // Заглушка
+                allRecipes = [
+                    { id: 'recipe_iron_sword', name: 'Рецепт: Железный меч', icon: '📜', result_item: 'Железный меч', result_icon: '⚔️', price: 80, ingredients: 'Железная руда x3, Кожа x1' },
+                    { id: 'recipe_dagger', name: 'Рецепт: Кинжал', icon: '📜', result_item: 'Кинжал', result_icon: '🗡️', price: 40, ingredients: 'Железная руда x1, Кожа x1' },
+                ];
+            }
+            renderItems();
+        }
+
+        function renderItems() {
+            const container = document.getElementById('itemsList');
+            container.innerHTML = '';
+
+            if (currentTab === 'craft') {
+                const known = allRecipes.filter(r => knownRecipes.includes(r.id));
+                if (known.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;color:#666;padding:20px;">Нет изученных рецептов</div>';
+                } else {
+                    known.forEach(recipe => {
+                        const card = document.createElement('div');
+                        card.className = 'item-card';
+                        card.innerHTML = `
+                            <div class="item-icon">${recipe.result_icon}</div>
+                            <div class="item-info">
+                                <div class="item-name">${recipe.result_item}</div>
+                                <div class="ingredients">${recipe.ingredients || 'Нет ингредиентов'}</div>
+                            </div>
+                            <button class="btn btn-craft" onclick="craftItem('${recipe.id}')">Изготовить</button>
+                        `;
+                        container.appendChild(card);
+                    });
+                }
+            } else if (currentTab === 'recipes') {
+                allRecipes.forEach(recipe => {
+                    const known = knownRecipes.includes(recipe.id);
+                    const card = document.createElement('div');
+                    card.className = 'item-card';
+                    card.innerHTML = `
+                        <div class="item-icon">${recipe.icon}</div>
+                        <div class="item-info">
+                            <div class="item-name">${recipe.name}</div>
+                            <div class="item-desc">${recipe.description || ''}</div>
+                            <div class="ingredients">${recipe.ingredients || ''}</div>
+                        </div>
+                        ${known ?
+                            '<span style="color:#5e5;font-size:12px;">✅ Изучен</span>' :
+                            `<button class="btn btn-learn" onclick="learnRecipe('${recipe.id}', ${recipe.price})">Изучить (${recipe.price}💰)</button>`
+                        }
+                    `;
+                    container.appendChild(card);
+                });
+            } else if (currentTab === 'reputation') {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <div class="item-icon">⭐</div>
+                    <div class="item-info">
+                        <div class="item-name">Репутация: ${reputation}</div>
+                        <div class="item-desc">
+                            ${reputation < 10 ? 'Куй больше, чтобы открыть новые рецепты!' :
+                              reputation < 25 ? 'Неплохо! Некоторые рецепты уже доступны.' :
+                              reputation < 50 ? 'Отличный кузнец! Скидка на рецепты 10%.' :
+                              'Мастер! Все рецепты доступны.'}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        async function craftItem(recipeId) {
+            try {
+                const response = await fetch('/api/blacksmith-craft/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ recipe_id: recipeId }),
+                });
+                const result = await response.json();
+                if (result.success) {
+                    reputation += 1;
+                    localStorage.setItem('blacksmithReputation', reputation);
+                    updateReputationDisplay();
+                    showSuccess(`✅ ${result.message}`);
+                }
+            } catch(e) {
+                reputation += 1;
+                localStorage.setItem('blacksmithReputation', reputation);
+                updateReputationDisplay();
+                showSuccess('✅ Предмет изготовлен!');
+            }
+        }
+
+        async function learnRecipe(recipeId, price) {
+            if (playerGold >= price) {
+                try {
+                    const response = await fetch('/api/blacksmith-learn/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ recipe_id: recipeId }),
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        playerGold -= price;
+                        knownRecipes.push(recipeId);
+                        localStorage.setItem('gold', playerGold);
+                        localStorage.setItem('knownRecipes', JSON.stringify(knownRecipes));
+                        updateGoldDisplay();
+                        showSuccess('✅ Рецепт изучен!');
+                        renderItems();
+                    }
+                } catch(e) {
+                    playerGold -= price;
+                    knownRecipes.push(recipeId);
+                    localStorage.setItem('gold', playerGold);
+                    localStorage.setItem('knownRecipes', JSON.stringify(knownRecipes));
+                    updateGoldDisplay();
+                    showSuccess('✅ Рецепт изучен!');
+                    renderItems();
+                }
+            } else {
+                showSuccess('❌ Недостаточно золота!');
+            }
+        }
+
+        function updateGoldDisplay() {
+            document.getElementById('goldDisplay').textContent = `💰 ${playerGold} золота`;
+        }
+
+        function updateReputationDisplay() {
+            document.getElementById('reputationDisplay').textContent = `Репутация: ${reputation}`;
+        }
+
+        function showSuccess(msg) {
+            const el = document.getElementById('successMsg');
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 2000);
+        }
+    </script>
+    <script src="/static/js/autosave.js"></script>
+    <script src="/static/js/navbar.js"></script>
+</body>
+</html>

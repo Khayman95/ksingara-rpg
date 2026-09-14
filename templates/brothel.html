@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингар — Бордель</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            color: #ff88aa;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+        .status-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .stat-card {
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 11px;
+            color: #888;
+        }
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 3px;
+        }
+        .gold-value { color: #f0c040; }
+        .rep-value { color: #ff88aa; }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
+            color: #aaa;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            background: #3e1a2a;
+            color: #ff88aa;
+            border-color: #ff88aa;
+        }
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .item-card {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .item-icon {
+            font-size: 28px;
+        }
+        .item-info {
+            flex-grow: 1;
+        }
+        .item-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+        .item-desc {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+        }
+        .item-price {
+            font-size: 13px;
+            color: #f0c040;
+            font-weight: bold;
+        }
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .btn-rest {
+            background: #8e2a5a;
+            color: white;
+        }
+        .btn-rest:hover:not(:disabled) { background: #9e3a6a; }
+        .btn-rest:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+        .btn-work {
+            background: #6e4a2a;
+            color: white;
+        }
+        .btn-work:hover:not(:disabled) { background: #8e5a3a; }
+        .btn-work:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+        .btn-back {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #333;
+            color: #ccc;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .btn-back:hover { background: #444; }
+        .success-msg {
+            text-align: center;
+            color: #5e5;
+            font-size: 13px;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .success-msg.show { opacity: 1; }
+        .rep-progress {
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .rep-bar {
+            background: #2a2a4e;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .rep-fill {
+            background: #ff88aa;
+            height: 100%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💋 БОРДЕЛЬ "РОЗОВЫЙ ФОНАРЬ"</h1>
+        <p class="subtitle">Отдохни, заработай, узнай секреты</p>
+
+        <div class="status-bar">
+            <div class="stat-card">
+                <div class="stat-label">💰 Золото</div>
+                <div class="stat-value gold-value" id="goldDisplay">100</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">⭐ Репутация</div>
+                <div class="stat-value rep-value" id="repDisplay">0</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('rest')">🛏️ Отдохнуть</div>
+            <div class="tab" onclick="switchTab('work')">💼 Работать</div>
+            <div class="tab" onclick="switchTab('rep')">⭐ Репутация</div>
+        </div>
+
+        <div class="items-list" id="itemsList"></div>
+
+        <div class="success-msg" id="successMsg">✅ Готово!</div>
+
+        <button class="btn-back" onclick="window.location.href='/living-district/'">← Вернуться в жилой район</button>
+    </div>
+
+    <script>
+        let playerGold = parseInt(localStorage.getItem('gold') || '100');
+        let reputation = parseInt(localStorage.getItem('brothelReputation') || '0');
+        let currentTab = 'rest';
+
+        const restOptions = [
+            { id: 'relax', name: 'Расслабиться', icon: '🌸', desc: 'Бафф +10% к уклонению (3 боя)', price: 25, buff: 'dodge' },
+            { id: 'luxury', name: 'VIP-комната', icon: '👑', desc: 'Бафф +20% к урону (3 боя)', price: 60, buff: 'damage' },
+            { id: 'massage', name: 'Массаж', icon: '💆', desc: 'Восстанавливает HP/MP полностью', price: 40, buff: null, heal: true },
+        ];
+
+        const workOptions = [
+            { id: 'entertainer', name: 'Развлекать гостей', icon: '🎭', desc: 'Пассивный доход: 5 золота', reward: 5, hours: 1 },
+            { id: 'dancer', name: 'Танцевать', icon: '💃', desc: 'Пассивный доход: 15 золота', reward: 15, hours: 3 },
+            { id: 'companion', name: 'Быть компаньоном', icon: '🥂', desc: 'Пассивный доход: 30 золота', reward: 30, hours: 6 },
+        ];
+
+        updateDisplays();
+        renderItems();
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            renderItems();
+        }
+
+        function renderItems() {
+            const container = document.getElementById('itemsList');
+            container.innerHTML = '';
+
+            if (currentTab === 'rest') {
+                restOptions.forEach(opt => {
+                    const card = document.createElement('div');
+                    card.className = 'item-card';
+                    card.innerHTML = `
+                        <div class="item-icon">${opt.icon}</div>
+                        <div class="item-info">
+                            <div class="item-name">${opt.name}</div>
+                            <div class="item-desc">${opt.desc}</div>
+                        </div>
+                        <div class="item-price">${opt.price}💰</div>
+                        <button class="btn btn-rest" ${playerGold < opt.price ? 'disabled' : ''} onclick="restOption('${opt.id}')">
+                            Выбрать
+                        </button>
+                    `;
+                    container.appendChild(card);
+                });
+            } else if (currentTab === 'work') {
+                // Проверяем, есть ли активная работа
+                const currentWork = JSON.parse(localStorage.getItem('currentWork') || 'null');
+
+                if (currentWork) {
+                    if (Date.now() >= currentWork.endTime) {
+                        // Работа завершена — начисляем награду
+                        playerGold += currentWork.reward;
+                        reputation += currentWork.repReward;
+                        saveStats();
+                        updateDisplays();
+                        localStorage.removeItem('currentWork');
+                        showSuccess(`✅ Работа завершена! +${currentWork.reward} золота`);
+                        // Продолжаем — рисуем список работ ниже
+                    } else {
+                        // Работа ещё идёт — показываем таймер
+                        const remaining = Math.ceil((currentWork.endTime - Date.now()) / 1000 / 60);
+                        container.innerHTML = `
+                            <div style="text-align:center;padding:30px;">
+                                <div style="font-size:48px;">⏳</div>
+                                <div style="font-size:16px;color:#f0c040;margin-top:15px;">${currentWork.name}</div>
+                                <div style="font-size:14px;color:#888;margin-top:5px;">
+                                    Осталось: ${remaining} мин.
+                                </div>
+                            </div>
+                        `;
+                        return;  // ← Выходим, не рисуем работы
+                    }
+                }
+
+                // Рисуем доступные работы
+                workOptions.forEach(opt => {
+                    const card = document.createElement('div');
+                    card.className = 'item-card';
+                    card.innerHTML = `
+                        <div class="item-icon">${opt.icon}</div>
+                        <div class="item-info">
+                            <div class="item-name">${opt.name}</div>
+                            <div class="item-desc">${opt.desc} (${opt.hours} ч.)</div>
+                        </div>
+                        <button class="btn btn-work" onclick="workShift('${opt.id}')">
+                            Работать
+                        </button>
+                    `;
+                    container.appendChild(card);
+                });
+            } else if (currentTab === 'rep') {
+                const nextLevel = getNextRepLevel();
+                const progress = Math.min(100, (reputation / nextLevel) * 100);
+
+                container.innerHTML = `
+                    <div class="rep-progress">
+                        <div style="font-size:14px;color:#e0e0e0;">Текущая репутация: <b style="color:#ff88aa">${reputation}</b></div>
+                        <div style="font-size:11px;color:#888;margin-top:5px;">До следующего уровня: ${nextLevel - reputation} очков</div>
+                        <div class="rep-bar">
+                            <div class="rep-fill" style="width:${progress}%"></div>
+                        </div>
+                        <div style="font-size:11px;color:#888;margin-top:10px;">
+                            ${reputation < 10 ? '🆕 Новичок — скидка 0%' :
+                              reputation < 25 ? '⭐ Постоянный клиент — скидка 5%' :
+                              reputation < 50 ? '⭐⭐ Уважаемый гость — скидка 10%' :
+                              reputation < 100 ? '⭐⭐⭐ VIP — скидка 20%' :
+                              '👑 Легенда — скидка 30%'}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function getNextRepLevel() {
+            if (reputation < 10) return 10;
+            if (reputation < 25) return 25;
+            if (reputation < 50) return 50;
+            if (reputation < 100) return 100;
+            return 200;
+        }
+
+        function getDiscount() {
+            if (reputation < 10) return 0;
+            if (reputation < 25) return 0.05;
+            if (reputation < 50) return 0.10;
+            if (reputation < 100) return 0.20;
+            return 0.30;
+        }
+
+        function restOption(optId) {
+            const opt = restOptions.find(o => o.id === optId);
+            if (!opt) return;
+
+            const discount = getDiscount();
+            const finalPrice = Math.floor(opt.price * (1 - discount));
+
+            if (playerGold < finalPrice) return;
+
+            playerGold -= finalPrice;
+            reputation += 2;
+
+            if (opt.heal) {
+                const maxHp = parseInt(localStorage.getItem('maxHp') || '100');
+                const maxMp = parseInt(localStorage.getItem('maxMp') || '50');
+                localStorage.setItem('currentHp', maxHp);
+                localStorage.setItem('currentMp', maxMp);
+            }
+
+            if (opt.buff) {
+                let buffs = JSON.parse(localStorage.getItem('buffs') || '{}');
+                buffs[opt.buff] = { level: 1, battles: 3 };
+                localStorage.setItem('buffs', JSON.stringify(buffs));
+            }
+
+            saveStats();
+            updateDisplays();
+            showSuccess(`✅ ${opt.name} — репутация +2`);
+            renderItems();
+        }
+
+        function workShift(optId) {
+            const opt = workOptions.find(o => o.id === optId);
+            if (!opt) return;
+
+            // Проверяем, не работает ли уже игрок
+            const currentWork = JSON.parse(localStorage.getItem('currentWork') || 'null');
+            if (currentWork && currentWork.endTime > Date.now()) {
+                const remaining = Math.ceil((currentWork.endTime - Date.now()) / 1000 / 60);
+                showSuccess(`⏳ Ты уже работаешь! Осталось ${remaining} мин.`);
+                return;
+            }
+
+            // Начинаем работу
+            const endTime = Date.now() + (opt.hours * 60 * 1000);  // часы → мс
+            const work = {
+                id: opt.id,
+                name: opt.name,
+                reward: opt.reward,
+                repReward: opt.hours,
+                endTime: endTime,
+            };
+            localStorage.setItem('currentWork', JSON.stringify(work));
+
+            showSuccess(`✅ Начал работу: ${opt.name}. Вернись через ${opt.hours} ч.`);
+            renderItems();
+        }
+
+        function saveStats() {
+            localStorage.setItem('gold', playerGold);
+            localStorage.setItem('brothelReputation', reputation);
+        }
+
+        function updateDisplays() {
+            document.getElementById('goldDisplay').textContent = playerGold;
+            document.getElementById('repDisplay').textContent = reputation;
+        }
+
+        function showSuccess(msg) {
+            const el = document.getElementById('successMsg');
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 2000);
+        }
+    </script>
+    <script src="/static/js/autosave.js"></script>
+    <script src="/static/js/navbar.js"></script>
+</body>
+</html>

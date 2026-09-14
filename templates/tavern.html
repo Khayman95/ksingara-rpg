@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингар — Таверна</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            color: #f0c040;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+        .status-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .stat-card {
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 10px;
+            color: #888;
+        }
+        .stat-value {
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 3px;
+        }
+        .hp-value { color: #e55; }
+        .mp-value { color: #55e; }
+        .gold-value { color: #f0c040; }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
+            color: #aaa;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            background: #2a2a4e;
+            color: #f0c040;
+            border-color: #f0c040;
+        }
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .item-card {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .item-icon {
+            font-size: 28px;
+        }
+        .item-info {
+            flex-grow: 1;
+        }
+        .item-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+        .item-desc {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+        }
+        .item-price {
+            font-size: 13px;
+            color: #f0c040;
+            font-weight: bold;
+        }
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .btn-order {
+            background: #6e4a2a;
+            color: white;
+        }
+        .btn-order:hover:not(:disabled) { background: #8e5a3a; }
+        .btn-order:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+        .btn-rest {
+            background: #2a4a6e;
+            color: white;
+        }
+        .btn-rest:hover:not(:disabled) { background: #3a5a8e; }
+        .btn-rest:disabled {
+            background: #333;
+            color: #666;
+            cursor: not-allowed;
+        }
+        .btn-back {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #333;
+            color: #ccc;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .btn-back:hover { background: #444; }
+        .success-msg {
+            text-align: center;
+            color: #5e5;
+            font-size: 13px;
+            margin-top: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .success-msg.show { opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍺 ТАВЕРНА "ПЬЯНЫЙ ГНОМ"</h1>
+        <p class="subtitle">Отдохни, подкрепись, узнай новости</p>
+
+        <div class="status-bar">
+            <div class="stat-card">
+                <div class="stat-label">❤️ HP</div>
+                <div class="stat-value hp-value" id="hpDisplay">100/100</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">💙 MP</div>
+                <div class="stat-value mp-value" id="mpDisplay">50/50</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">💰 Золото</div>
+                <div class="stat-value gold-value" id="goldDisplay">100</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('food')">🍞 Еда</div>
+            <div class="tab" onclick="switchTab('rest')">🛏️ Комната</div>
+            <div class="tab" onclick="switchTab('quests')">📜 Задания</div>
+        </div>
+
+        <div class="items-list" id="itemsList"></div>
+
+        <div class="success-msg" id="successMsg">✅ Готово!</div>
+
+        <button class="btn-back" onclick="window.location.href='/living-district/'">← Вернуться в жилой район</button>
+    </div>
+
+    <script>
+        let playerHP = parseInt(localStorage.getItem('currentHp') || '100');
+        let playerMaxHP = parseInt(localStorage.getItem('maxHp') || '100');
+        let playerMP = parseInt(localStorage.getItem('currentMp') || '50');
+        let playerMaxMP = parseInt(localStorage.getItem('maxMp') || '50');
+        let playerGold = parseInt(localStorage.getItem('gold') || '100');
+        let currentTab = 'food';
+
+        const foods = [
+            { id: 'bread', name: 'Хлеб', icon: '🍞', desc: '+10 HP', price: 3, heal: 10 },
+            { id: 'cheese', name: 'Сыр', icon: '🧀', desc: '+15 HP', price: 5, heal: 15 },
+            { id: 'meat', name: 'Жареное мясо', icon: '🍖', desc: '+30 HP', price: 10, heal: 30 },
+            { id: 'soup', name: 'Похлёбка', icon: '🍲', desc: '+20 HP, +10 MP', price: 12, heal: 20, mana: 10 },
+            { id: 'feast', name: 'Пир', icon: '🍗', desc: 'Полное восстановление', price: 50, heal: 9999, mana: 9999 },
+        ];
+
+        const rooms = [
+            { id: 'bed', name: 'Простая кровать', icon: '🛏️', desc: 'Полное восстановление HP', price: 15 },
+            { id: 'luxury', name: 'Люкс', icon: '👑', desc: 'Полное восстановление HP/MP', price: 30 },
+        ];
+
+        updateDisplays();
+        renderItems();
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            renderItems();
+        }
+
+        function renderItems() {
+            const container = document.getElementById('itemsList');
+            container.innerHTML = '';
+
+            if (currentTab === 'food') {
+                foods.forEach(food => {
+                    const card = document.createElement('div');
+                    card.className = 'item-card';
+                    card.innerHTML = `
+                        <div class="item-icon">${food.icon}</div>
+                        <div class="item-info">
+                            <div class="item-name">${food.name}</div>
+                            <div class="item-desc">${food.desc}</div>
+                        </div>
+                        <div class="item-price">${food.price}💰</div>
+                        <button class="btn btn-order" ${playerGold < food.price ? 'disabled' : ''} onclick="buyFood('${food.id}')">
+                            Заказать
+                        </button>
+                    `;
+                    container.appendChild(card);
+                });
+            } else if (currentTab === 'rest') {
+                rooms.forEach(room => {
+                    const card = document.createElement('div');
+                    card.className = 'item-card';
+                    card.innerHTML = `
+                        <div class="item-icon">${room.icon}</div>
+                        <div class="item-info">
+                            <div class="item-name">${room.name}</div>
+                            <div class="item-desc">${room.desc}</div>
+                        </div>
+                        <div class="item-price">${room.price}💰</div>
+                        <button class="btn btn-rest" ${playerGold < room.price ? 'disabled' : ''} onclick="rentRoom('${room.id}')">
+                            Снять
+                        </button>
+                    `;
+                    container.appendChild(card);
+                });
+            } else if (currentTab === 'quests') {
+                container.innerHTML = '<div style="text-align:center;color:#666;padding:20px;">📜 Доска заданий скоро откроется...</div>';
+            }
+        }
+
+        function buyFood(foodId) {
+            const food = foods.find(f => f.id === foodId);
+            if (!food) return;
+            if (playerGold < food.price) return;
+
+            playerGold -= food.price;
+            if (food.heal) {
+                playerHP = Math.min(playerHP + food.heal, playerMaxHP);
+            }
+            if (food.mana) {
+                playerMP = Math.min(playerMP + food.mana, playerMaxMP);
+            }
+
+            saveStats();
+            updateDisplays();
+            showSuccess(`✅ Съедено: ${food.name}`);
+            renderItems();
+        }
+
+        function rentRoom(roomId) {
+            const room = rooms.find(r => r.id === roomId);
+            if (!room) return;
+            if (playerGold < room.price) return;
+
+            playerGold -= room.price;
+            playerHP = playerMaxHP;
+
+            if (room.id === 'luxury') {
+                playerMP = playerMaxMP;
+            }
+
+            saveStats();
+            updateDisplays();
+            showSuccess(`✅ Отдохнул в "${room.name}"`);
+            renderItems();
+        }
+
+        function saveStats() {
+            localStorage.setItem('gold', playerGold);
+            localStorage.setItem('currentHp', playerHP);
+            localStorage.setItem('currentMp', playerMP);
+        }
+
+        function updateDisplays() {
+            document.getElementById('hpDisplay').textContent = `${playerHP}/${playerMaxHP}`;
+            document.getElementById('mpDisplay').textContent = `${playerMP}/${playerMaxMP}`;
+            document.getElementById('goldDisplay').textContent = playerGold;
+        }
+
+        function showSuccess(msg) {
+            const el = document.getElementById('successMsg');
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 2000);
+        }
+    </script>
+    <script src="/static/js/autosave.js"></script>
+    <script src="/static/js/navbar.js"></script>
+</body>
+</html>
