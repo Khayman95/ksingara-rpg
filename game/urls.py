@@ -22,4 +22,12 @@ urlpatterns = [
     path('world-market-buy/', views.api_world_market_buy, name='api_world_market_buy'),
     path('currencies/', views.api_currencies, name='api_currencies'),
     path('exchange-currency/', views.api_exchange_currency, name='api_exchange_currency'),
+    path('battle/start/', views.api_battle_start, name='api_battle_start'),
+    path('battle/state/', views.api_battle_state, name='api_battle_state'),
+    path('battle/skill/', views.api_battle_skill, name='api_battle_skill'),
+    path('battle/spell/', views.api_battle_spell, name='api_battle_spell'),
+    path('battle/tick/', views.api_battle_tick, name='api_battle_tick'),
+    path('battle/target/', views.api_battle_select_target, name='api_battle_target'),
+    path('battle/escape/', views.api_battle_escape, name='api_battle_escape'),
+
 ]

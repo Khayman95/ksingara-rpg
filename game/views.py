@@ -5,6 +5,8 @@ from django.shortcuts import render
 from .db_utils import get_db_connection
 from .models import Player
 from datetime import datetime
+from core.battle import current_battle, start_battle
+import core.battle as battle_module
 import json
 import random
 from datetime import date, datetime
@@ -492,6 +494,96 @@ def api_exchange_currency(request):
         })
 
     return JsonResponse({'success': False, 'message': 'Неверный запрос'})
+
+
+@csrf_exempt
+def api_battle_start(request):
+    """Начало боя"""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        enemies_ids = data.get('enemies', ['glass_wasp'])
+
+        battle = start_battle(enemies_ids)
+        return JsonResponse({'success': True, 'state': battle.get_state()})
+
+
+def api_battle_state(request):
+    """Состояние боя"""
+    if battle_module.current_battle:
+        return JsonResponse(battle_module.current_battle.get_state())
+    return JsonResponse({'error': 'Бой не активен'})
+
+
+@csrf_exempt
+def api_battle_skill(request):
+    """Использование навыка"""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        skill_id = data.get('skill_id')
+
+        if not battle_module.current_battle:
+            return JsonResponse({'success': False, 'message': 'Бой не активен'})
+
+        result = battle_module.current_battle.player_use_skill(skill_id)
+        return JsonResponse({
+            'success': result['success'],
+            'message': result.get('message', ''),
+            'state': battle_module.current_battle.get_state(),
+        })
+
+
+@csrf_exempt
+def api_battle_spell(request):
+    """Использование заклинания"""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        spell_id = data.get('spell_id')
+
+        if not battle_module.current_battle:
+            return JsonResponse({'success': False, 'message': 'Бой не активен'})
+
+        result = battle_module.current_battle.player_use_spell(spell_id)
+        return JsonResponse({
+            'success': result['success'],
+            'message': result.get('message', ''),
+            'state': battle_module.current_battle.get_state(),
+        })
+
+
+@csrf_exempt
+def api_battle_tick(request):
+    """Обновление боя (вызывается каждые 0.1 сек)"""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        dt = data.get('dt', 0.1)
+
+        if not battle_module.current_battle:
+            return JsonResponse({'error': 'Бой не активен'})
+
+        battle_module.current_battle.update(dt)
+        return JsonResponse(battle_module.current_battle.get_state())
+
+
+@csrf_exempt
+def api_battle_select_target(request):
+    """Выбор цели"""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        index = data.get('index', 0)
+
+        if battle_module.current_battle:
+            battle_module.current_battle.select_target(index)
+            return JsonResponse(battle_module.current_battle.get_state())
+        return JsonResponse({'error': 'Бой не активен'})
+
+
+@csrf_exempt
+def api_battle_escape(request):
+    """Попытка сбежать"""
+    if battle_module.current_battle:
+        success = battle_module.current_battle.try_escape()
+        return JsonResponse({'success': success, 'state': battle_module.current_battle.get_state()})
+    return JsonResponse({'error': 'Бой не активен'})
 
 def codex(request):
     """Кодекс (база знаний)"""
