@@ -66,8 +66,10 @@
         }
         .btn-back:hover { background: #444; }
     </style>
+    <script src="/static/js/pixelbg.all.js"></script>
 </head>
 <body>
+    <div id="bg" style="position:fixed; inset:0; z-index:-1;"></div>
     <div class="container">
         <h1>🏘️ ЖИЛОЙ РАЙОН</h1>
 
@@ -92,6 +94,7 @@
         <button class="btn-back" onclick="window.location.href='/city/'">← Вернуться в город</button>
     </div>
     <script src="/static/js/autosave.js"></script>
+    <script src="/static/js/city_bg.js"></script>
     <script src="/static/js/navbar.js"></script>
 </body>
 </html>

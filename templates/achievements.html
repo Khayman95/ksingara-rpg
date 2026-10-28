@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингар — Достижения</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        h1 {
+            font-size: 24px;
+            color: #f0c040;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.9);
+        }
+        .placeholder {
+            font-size: 64px;
+            margin-bottom: 15px;
+        }
+        .desc {
+            font-size: 15px;
+            color: #888;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        .btn-back {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: rgba(51, 51, 51, 0.95);
+            color: #ccc;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-back:hover { background: rgba(68, 68, 68, 0.95); }
+    </style>
+</head>
+<body>
+    <div id="bg" style="position:fixed; inset:0; z-index:-1;"></div>
+    <div class="container">
+        <div class="placeholder">🏆</div>
+        <h1>Доска достижений</h1>
+        <p class="desc">Здесь будут отображаться твои достижения.<br>В разработке...</p>
+        <a href="/circle-of-greats/" class="btn-back">← Вернуться в Круг Великих</a>
+    </div>
+    <script src="/static/js/pixelbg.all.js"></script>
+    <script src="/static/js/city_bg.js"></script>
+    <script src="/static/js/navbar.js"></script>
+</body>
+</html>

@@ -153,8 +153,10 @@
         }
         .success-msg.show { opacity: 1; }
     </style>
+    <script src="/static/js/pixelbg.all.js"></script>
 </head>
 <body>
+    <div id="bg" style="position:fixed; inset:0; z-index:-1;"></div>
     <div class="container">
         <div class="blacksmith-info">
             <div class="blacksmith-icon">⚒️</div>
@@ -178,10 +180,10 @@
     </div>
 
     <script>
-        let playerGold = parseInt(localStorage.getItem('gold') || '100');
+        let playerGold = 0;
         let reputation = parseInt(localStorage.getItem('blacksmithReputation') || '0');
         let currentTab = 'craft';
-        let knownRecipes = JSON.parse(localStorage.getItem('knownRecipes') || '[]');
+        let knownRecipes = [];
         let allRecipes = [];
 
         updateGoldDisplay();
@@ -195,17 +197,27 @@
             renderItems();
         }
 
+        async function loadPlayerGold() {
+            try {
+                const response = await fetch('/api/player/stats/');
+                const data = await response.json();
+                if (data.success) {
+                    playerGold = data.gold;
+                    updateGoldDisplay();
+                }
+            } catch(e) {
+                console.error('Ошибка загрузки золота:', e);
+            }
+        }
+
         async function loadRecipes() {
             try {
                 const response = await fetch('/api/blacksmith-recipes/');
                 const data = await response.json();
                 allRecipes = data.recipes || [];
+                knownRecipes = data.known || [];  // ← из БД
             } catch(e) {
-                // Заглушка
-                allRecipes = [
-                    { id: 'recipe_iron_sword', name: 'Рецепт: Железный меч', icon: '📜', result_item: 'Железный меч', result_icon: '⚔️', price: 80, ingredients: 'Железная руда x3, Кожа x1' },
-                    { id: 'recipe_dagger', name: 'Рецепт: Кинжал', icon: '📜', result_item: 'Кинжал', result_icon: '🗡️', price: 40, ingredients: 'Железная руда x1, Кожа x1' },
-                ];
+                console.error(e);
             }
             renderItems();
         }
@@ -275,58 +287,64 @@
             try {
                 const response = await fetch('/api/blacksmith-craft/', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ recipe_id: recipeId }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken(),
+                    },
+                    body: JSON.stringify({recipe_id: recipeId}),
                 });
                 const result = await response.json();
+
                 if (result.success) {
-                    reputation += 1;
-                    localStorage.setItem('blacksmithReputation', reputation);
-                    updateReputationDisplay();
-                    showSuccess(`✅ ${result.message}`);
+                    showSuccess('✅ ' + result.message);
+                    await loadPlayerGold();
+                    loadRecipes();
+                } else {
+                    showSuccess('❌ ' + result.message);
                 }
             } catch(e) {
-                reputation += 1;
-                localStorage.setItem('blacksmithReputation', reputation);
-                updateReputationDisplay();
-                showSuccess('✅ Предмет изготовлен!');
+                console.error(e);
+                showSuccess('❌ Ошибка');
             }
         }
 
         async function learnRecipe(recipeId, price) {
-            if (playerGold >= price) {
-                try {
-                    const response = await fetch('/api/blacksmith-learn/', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ recipe_id: recipeId }),
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        playerGold -= price;
-                        knownRecipes.push(recipeId);
-                        localStorage.setItem('gold', playerGold);
-                        localStorage.setItem('knownRecipes', JSON.stringify(knownRecipes));
-                        updateGoldDisplay();
-                        showSuccess('✅ Рецепт изучен!');
-                        renderItems();
-                    }
-                } catch(e) {
-                    playerGold -= price;
+            if (playerGold < price) {
+                showSuccess('❌ Недостаточно золота!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/blacksmith-learn/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken(),
+                    },
+                    body: JSON.stringify({
+                        recipe_id: recipeId,
+                        price: price,
+                    }),
+                });
+                const result = await response.json();
+
+                if (result.success) {
                     knownRecipes.push(recipeId);
-                    localStorage.setItem('gold', playerGold);
-                    localStorage.setItem('knownRecipes', JSON.stringify(knownRecipes));
-                    updateGoldDisplay();
+                    await loadPlayerGold();  // ← обновить золото из БД
                     showSuccess('✅ Рецепт изучен!');
                     renderItems();
+                } else {
+                    showSuccess('❌ ' + result.message);
                 }
-            } else {
-                showSuccess('❌ Недостаточно золота!');
+            } catch(e) {
+                console.error(e);
+                showSuccess('❌ Ошибка');
             }
         }
 
         function updateGoldDisplay() {
-            document.getElementById('goldDisplay').textContent = `💰 ${playerGold} золота`;
+            const el = document.getElementById('goldDisplay');
+            if (el) el.textContent = `💰 ${playerGold} золота`;
         }
 
         function updateReputationDisplay() {
@@ -339,8 +357,25 @@
             el.classList.add('show');
             setTimeout(() => el.classList.remove('show'), 2000);
         }
+
+        async function loadPlayerGold() {
+            try {
+                const response = await fetch('/api/player/stats/');
+                const data = await response.json();
+                if (data.success) {
+                    playerGold = data.gold;
+                    updateGoldDisplay();
+                }
+            } catch(e) {
+                console.error('Ошибка загрузки золота:', e);
+            }
+        }
+
+        loadPlayerGold();
+
     </script>
     <script src="/static/js/autosave.js"></script>
+    <script src="/static/js/city_bg.js"></script>
     <script src="/static/js/navbar.js"></script>
 </body>
 </html>

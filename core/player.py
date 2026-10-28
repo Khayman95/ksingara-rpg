@@ -90,7 +90,7 @@ class PlayerData:
         """Пересчитывает HP/MP"""
         bonuses = self.get_equipment_bonuses()
 
-        self.combat['max_health'] = 50 + (self.stats['strength'] * 10) + bonuses.get('max_health', 0)
+        self.combat['max_health'] = 150 + (self.stats['strength'] * 15) + bonuses.get('max_health', 0)
         self.combat['current_health'] = self.combat['max_health']
         self.combat['max_mana'] = 20 + (self.stats['intelligence'] * 5) + bonuses.get('max_mana', 0)
         self.combat['current_mana'] = self.combat['max_mana']
@@ -231,13 +231,21 @@ class PlayerData:
     # ============ ИНВЕНТАРЬ ============
 
     def add_to_inventory(self, item_id, quantity=1):
+        """Добавляет предмет в инвентарь"""
+        # Проверяем, есть ли уже такой предмет
         for item in self.inventory['items']:
             if isinstance(item, dict) and item.get('id') == item_id:
                 item['quantity'] = item.get('quantity', 1) + quantity
                 return True
+            elif item == item_id:
+                return True
 
+        # Добавляем новый
         if len(self.inventory['items']) < self.inventory['max_slots']:
-            self.inventory['items'].append({'id': item_id, 'quantity': quantity})
+            self.inventory['items'].append({
+                'id': item_id,
+                'quantity': quantity
+            })
             return True
         return False
 

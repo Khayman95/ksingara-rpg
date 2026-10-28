@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингар — Выбор слота</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            color: #f0c040;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 25px;
+        }
+        .slot {
+            display: flex;
+            align-items: center;
+            background: #1a1a2e;
+            border: 2px solid #2a2a4e;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .slot:hover {
+            border-color: #4a6a9e;
+        }
+        .slot.occupied {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .slot-num {
+            font-size: 24px;
+            font-weight: bold;
+            color: #f0c040;
+            width: 40px;
+        }
+        .slot-info {
+            flex-grow: 1;
+        }
+        .slot-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+        .slot-desc {
+            font-size: 12px;
+            color: #888;
+            margin-top: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📁 ВЫБЕРИ СЛОТ</h1>
+        <p class="subtitle">Куда сохранить нового персонажа?</p>
+        <div id="slots"></div>
+    </div>
+
+    <script>
+        async function loadSlots() {
+            const response = await fetch('/api/player/list/');
+            const data = await response.json();
+
+            const container = document.getElementById('slots');
+            container.innerHTML = '';
+
+            data.players.forEach(p => {
+                const slot = document.createElement('div');
+                slot.className = 'slot' + (p.is_empty ? '' : ' occupied');
+
+                slot.innerHTML = `
+                    <div class="slot-num">${p.slot}</div>
+                    <div class="slot-info">
+                        <div class="slot-name">${p.is_empty ? 'Пусто' : p.name}</div>
+                        <div class="slot-desc">${p.is_empty ? 'Нажми, чтобы создать персонажа здесь' : 'Слот занят'}</div>
+                    </div>
+                `;
+
+                if (p.is_empty) {
+                    slot.onclick = () => selectSlot(p.slot);
+                }
+
+                container.appendChild(slot);
+            });
+        }
+
+        async function selectSlot(slot) {
+            const race = JSON.parse(localStorage.getItem('selectedRace') || '{}');
+            const element = JSON.parse(localStorage.getItem('selectedElement') || '{}');
+            const name = localStorage.getItem('playerName') || 'Герой';
+            const gender = localStorage.getItem('selectedGender') || 'male';
+
+            // Проверка
+            if (!race.id || !element.id) {
+                alert('Ошибка: данные о расе/стихии потеряны. Пройди создание заново.');
+                window.location.href = '/race-select/';
+                return;
+            }
+
+            const stats = race.stats || { strength: 5, agility: 5, intelligence: 5 };
+
+            console.log('🔍 Создаём персонажа:', { slot, name, gender, race: race.id, element: element.id, stats });
+
+            const response = await fetch('/api/player/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),  // ← ДОБАВЬ ЭТУ СТРОКУ
+                },
+                body: JSON.stringify({
+                    slot: slot,
+                    name: name,
+                    gender: gender,
+                    race: race.id,
+                    element: element.id,
+                    stats: stats,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert(`✅ Персонаж создан в слоте ${slot}`);
+                window.location.href = '/map/';
+            } else {
+                alert('Ошибка: ' + data.message);
+            }
+        }
+
+        // Добавь функцию получения CSRF-токена
+        function getCsrfToken() {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, 10) === ('csrftoken=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(10));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        loadSlots();
+    </script>
+</body>
+</html>

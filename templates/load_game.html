@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ксингар — Сохранение</title>
+    <title>Ксингар — Загрузка</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -16,30 +16,31 @@
             min-height: 100vh;
         }
         .container {
-            max-width: 450px;
+            max-width: 500px;
             width: 100%;
             padding: 20px;
         }
         h1 {
-            font-size: 28px;
+            font-size: 24px;
             color: #f0c040;
             text-align: center;
-            margin-bottom: 10px;
-        }
-        .hint {
-            text-align: center;
-            color: #888;
-            font-size: 14px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
         .slot {
-            display: flex;
-            align-items: center;
             background: #1a1a2e;
+            border: 2px solid #2a2a4e;
             border-radius: 10px;
             padding: 15px;
             margin-bottom: 10px;
+            display: flex;
+            align-items: center;
             gap: 12px;
+        }
+        .slot-num {
+            font-size: 24px;
+            font-weight: bold;
+            color: #f0c040;
+            width: 40px;
         }
         .slot-info {
             flex-grow: 1;
@@ -49,37 +50,24 @@
             font-weight: bold;
             color: #e0e0e0;
         }
-        .slot-name.empty {
-            color: #666;
-        }
-        .slot-detail {
-            font-size: 13px;
+        .slot-desc {
+            font-size: 12px;
             color: #888;
             margin-top: 3px;
         }
-        .slot-date {
-            font-size: 11px;
-            color: #555;
-            margin-top: 2px;
-        }
+        .slot.empty .slot-name { color: #666; }
         .btn {
-            padding: 10px 18px;
+            padding: 8px 16px;
             border: none;
             border-radius: 6px;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
-            transition: background 0.2s;
-            white-space: nowrap;
-        }
-        .btn-save {
-            background: #2a5a8e;
             color: white;
+            margin-left: 5px;
         }
-        .btn-save:hover { background: #356a9e; }
-        .btn-delete {
-            background: #6e2a2a;
-            color: white;
-        }
+        .btn-load { background: #2a6e2a; }
+        .btn-load:hover { background: #358535; }
+        .btn-delete { background: #6e2a2a; }
         .btn-delete:hover { background: #8e3a3a; }
         .btn-back {
             display: block;
@@ -90,161 +78,115 @@
             color: #ccc;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 15px;
             cursor: pointer;
+            text-align: center;
         }
         .btn-back:hover { background: #444; }
-        .success-msg {
-            text-align: center;
-            color: #5e5;
-            font-size: 14px;
-            margin-top: 15px;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        .success-msg.show { opacity: 1; }
-        .btn-load {
-            background: #2a6e2a;
-            color: white;
-        }
-        .btn-load:hover { background: #358535; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>📂 ЗАГРУЗИТЬ ИГРУ</h1>
-        <p class="hint">Выбери слот для загрузки персонажа</p>
-
         <div id="slots"></div>
-
-        <div class="success-msg" id="successMsg">✅ Игра сохранена!</div>
-
         <button class="btn-back" onclick="window.location.href='/'">← Назад</button>
     </div>
 
     <script>
-        async function getSaves() {
-            const response = await fetch('/api/saves/');
-            return await response.json();
-        }
+        async function loadSlots() {
+            const response = await fetch('/api/player/list/');
+            const data = await response.json();
 
-        async function renderSlots() {
-            const saves = await getSaves();
             const container = document.getElementById('slots');
             container.innerHTML = '';
 
-            for (let i = 1; i <= 3; i++) {
-                const save = saves[`slot${i}`];
+            data.players.forEach(p => {
                 const slot = document.createElement('div');
-                slot.className = 'slot';
+                slot.className = 'slot' + (p.is_empty ? ' empty' : '');
 
-                if (save && save.exists) {
-                    slot.innerHTML = `
-                        <div class="slot-info">
-                            <div class="slot-name">Слот ${i}: ${save.name}</div>
-                            <div class="slot-detail">${save.race} | ${save.element} | Ур.${save.level || 1}</div>
-                            <div class="slot-date">${save.timestamp}</div>
-                        </div>
-                        <button class="btn btn-load" onclick="loadSlot(${i})">Загрузить</button>
-                        <button class="btn btn-delete" onclick="deleteSave(${i})">✕</button>
-                    `;
-                } else {
-                    slot.innerHTML = `
-                        <div class="slot-info">
-                            <div class="slot-name empty">Слот ${i}: [ПУСТО]</div>
-                        </div>
-                        <button class="btn btn-save" onclick="saveToSlot(${i})">Сохранить</button>
-                    `;
-                }
+                slot.innerHTML = `
+                    <div class="slot-num">${p.slot}</div>
+                    <div class="slot-info">
+                        <div class="slot-name">${p.is_empty ? '[ПУСТО]' : p.name}</div>
+                        <div class="slot-desc">${p.is_empty ? 'Слот пуст' : `${p.race} | ${p.element} | ${p.updated_at}`}</div>
+                    </div>
+                    ${!p.is_empty ? `
+                        <button class="btn btn-load" onclick="loadSlot(${p.slot})">Загрузить</button>
+                        <button class="btn btn-delete" onclick="deleteSlot(${p.slot})">✕</button>
+                    ` : ''}
+                `;
 
                 container.appendChild(slot);
-            }
+            });
         }
 
         async function loadSlot(slot) {
-            const response = await fetch(`/api/load/${slot}/`);
-            const result = await response.json();
+            const response = await fetch('/api/player/load/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({slot: slot}),
+            });
 
-            console.log('API ответ:', result);
+            const data = await response.json();
 
-            if (result.success && result.data) {
-                const data = result.data;
-                console.log('currentScreen из файла:', data.currentScreen);
-
-                // Активный слот
-                localStorage.setItem('activeSlot', slot);
-
-                // Восстанавливаем данные
-                localStorage.setItem('playerName', data.name || 'Герой');
-                localStorage.setItem('selectedGender', data.gender || 'male');
-                localStorage.setItem('playerX', data.playerX || 13);
-                localStorage.setItem('playerY', data.playerY || 13);
-                localStorage.setItem('citySelected', String(data.citySelected || false));
-
-                // Раса и стихия
-                localStorage.setItem('selectedRace', JSON.stringify({
-                    id: data.race || 'human',
-                    name: data.raceName || 'Человек',
-                    stats: data.stats || {},
-                    icon: '🧔'
-                }));
-
-                localStorage.setItem('selectedElement', JSON.stringify({
-                    id: data.element || 'fire',
-                    name: data.elementName || 'Огонь',
-                    icon: '🔥'
-                }));
-
-                // Куда переходим?
-                const screen = data.currentScreen || 'city';
-                console.log('Экран для перехода:', screen);
-
+            if (data.success) {
+                // Переходим на сохранённый экран
+                const screen = data.screen || 'map';
                 const screenUrls = {
                     'map': '/map/',
                     'city': '/city/',
                     'trade_district': '/trade-district/',
                     'merchant': '/merchant/',
+                    'blacksmith': '/blacksmith/',
+                    'black_market': '/black-market/',
                     'admin_district': '/admin-district/',
                     'living_district': '/living-district/',
-                    'circle_of_blades': '/circle-of-blades/',
-                    'circle_of_greats': '/circle-of-greats/',
+                    'tavern': '/tavern/',
+                    'kennel': '/kennel/',
+                    'brothel': '/brothel/',
                     'circle_of_access': '/circle-of-access/',
+                    'circle_of_greats': '/circle-of-greats/',
+                    'circle_of_blades': '/circle-of-blades/',
                     'weapon_skills': '/weapon-skills/',
                     'training_dummy': '/training-dummy/',
                     'blessing_check': '/blessing-check/',
                     'blessing_check_magic': '/blessing-check-magic/',
                     'character': '/character/',
-                    'blacksmith': '/blacksmith/',
-                    'black_market': '/black-market/',
-                    'tavern': '/tavern/',
-                    'brothel': '/brothel/',
-                    'kennel': '/kennel/',
+                    'battle': '/battle/',
+                    'codex': '/codex/',
+                    // ✅ ДОБАВИТЬ:
+                    'spell_library': '/spell-library/',
+                    'achievements': '/achievements/',
+                    'sell_items': '/sell-items/',
+                    'join_beyonders': '/join-beyonders/',
+                    'beyond_barrier': '/beyond-barrier/',
                 };
 
-
-                const url = screenUrls[screen] || '/city/';
-                console.log('URL:', url);
-                console.log('Сейчас перейду на:', url);
-
-                window.location.href = url;
+                window.location.href = screenUrls[screen] || '/map/';
             } else {
-                alert('Не удалось загрузить сохранение');
+                alert('Ошибка: ' + data.message);
             }
         }
 
-        async function deleteSave(slot) {
-            if (confirm(`Удалить сохранение в слоте ${slot}?`)) {
-                await fetch(`/api/delete-save/${slot}/`, { method: 'POST' });
-                await renderSlots();
+        async function deleteSlot(slot) {
+            if (!confirm(`Удалить персонажа из слота ${slot}?`)) return;
+
+            const response = await fetch('/api/player/delete/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({slot: slot}),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                loadSlots();
+            } else {
+                alert('Ошибка: ' + data.message);
             }
         }
 
-        function goToMap() {
-            window.location.href = '/map/';
-        }
-
-        renderSlots();
+        loadSlots();
     </script>
-
 </body>
 </html>

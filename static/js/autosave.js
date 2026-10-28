@@ -66,17 +66,25 @@ function getCurrentScreen() {
     if (path.includes('training-dummy')) return 'training_dummy';
     if (path.includes('blessing-check-magic')) return 'blessing_check_magic';
     if (path.includes('blessing-check')) return 'blessing_check';
-    if (path.includes('map')) return 'map';
-    if (path.includes('city')) return 'city';
     if (path.includes('trade-district')) return 'trade_district';
-    if (path.includes('merchant')) return 'merchant';
-    if (path.includes('admin-district')) return 'admin_district';
     if (path.includes('living-district')) return 'living_district';
-    if (path.includes('character')) return 'character';
+    if (path.includes('admin-district')) return 'admin_district';
+    if (path.includes('merchant')) return 'merchant';
     if (path.includes('blacksmith')) return 'blacksmith';
     if (path.includes('black-market')) return 'black_market';
     if (path.includes('tavern')) return 'tavern';
     if (path.includes('brothel')) return 'brothel';
     if (path.includes('kennel')) return 'kennel';
+    // ✅ ДОБАВИТЬ:
+    if (path.includes('spell-library')) return 'spell_library';
+    if (path.includes('achievements')) return 'achievements';
+    if (path.includes('sell-items')) return 'sell_items';
+    if (path.includes('join-beyonders')) return 'join_beyonders';
+    if (path.includes('beyond-barrier')) return 'beyond_barrier';
+    // Остальное:
+    if (path.includes('character')) return 'character';
+    if (path.includes('codex')) return 'codex';
+    if (path.includes('map')) return 'map';
+    if (path.includes('city')) return 'city';
     return 'map';
 }

@@ -18,29 +18,26 @@
         .container {
             max-width: 500px;
             padding: 20px;
+            position: relative;
+            z-index: 1;
         }
         h1 {
             font-size: 26px;
             color: #f0c040;
             text-align: center;
             margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.9);
         }
         .assistant {
             display: flex;
             gap: 15px;
-            background: #1a1a2e;
+            background: rgba(26, 26, 46, 0.95);
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 20px;
             align-items: center;
         }
-        .assistant-icon {
-            font-size: 64px;
-            flex-shrink: 0;
-        }
-        .assistant-info {
-            flex-grow: 1;
-        }
+        .assistant-icon { font-size: 64px; }
         .assistant-name {
             font-size: 18px;
             color: #6a9eff;
@@ -59,7 +56,7 @@
             margin-bottom: 20px;
         }
         .district-card {
-            background: #1a1a2e;
+            background: rgba(26, 26, 46, 0.95);
             border: 1px solid #2a2a4e;
             border-radius: 10px;
             padding: 15px;
@@ -73,7 +70,7 @@
         }
         .district-card:hover {
             border-color: #4a6a9e;
-            background: #1e1e38;
+            background: rgba(30, 30, 56, 0.95);
         }
         .district-name {
             font-size: 16px;
@@ -93,7 +90,7 @@
             display: block;
             width: 100%;
             padding: 12px;
-            background: #333;
+            background: rgba(51, 51, 51, 0.95);
             color: #ccc;
             border: none;
             border-radius: 8px;
@@ -101,25 +98,24 @@
             cursor: pointer;
             text-align: center;
         }
-        .btn-back:hover { background: #444; }
+        .btn-back:hover { background: rgba(68, 68, 68, 0.95); }
     </style>
+    <script src="/static/js/pixelbg.all.js"></script>
 </head>
 <body>
+    <div id="bg" style="position:fixed; inset:0; z-index:-1;"></div>
+
     <div class="container">
         <h1 id="cityName">🏰 Город</h1>
 
-        <!-- Ассистентка Лиара -->
         <div class="assistant">
             <div class="assistant-icon">🧝‍♀️</div>
             <div class="assistant-info">
                 <div class="assistant-name">Лиара</div>
-                <div class="assistant-text" id="liaraText">
-                    Добро пожаловать! Я Лиара, твой ассистент. Я буду сопровождать тебя повсюду.
-                </div>
+                <div class="assistant-text" id="liaraText">Загрузка...</div>
             </div>
         </div>
 
-        <!-- Районы -->
         <div class="districts">
             <a href="/trade-district/" class="district-card">
                 <div>
@@ -146,50 +142,73 @@
             </a>
         </div>
 
-        <button class="btn-back" onclick="leaveCity()">🚶 Выйти на карту</button>
+        <button class="btn-back" onclick="window.location.href='/map/'">🚶 Выйти на карту</button>
     </div>
 
+    <script src="/static/js/pixelbg.all.js"></script>
     <script>
-        async function leaveCity() {
-            await autosave();
-            window.location.href = '/map/';
+        // Маппинг город → фон
+        const CITY_BACKGROUNDS = {
+            'Bergen': 'city_steampunk',
+            'Laglou': 'city_magic',
+            'Redania': 'city_hybrid',
+        };
+
+        async function init() {
+            // Получаем данные о городе из API
+            let cityId = localStorage.getItem('currentCityId');
+            let cityName = localStorage.getItem('currentCity');
+
+            // Если нет — запрашиваем у сервера
+            if (!cityId) {
+                try {
+                    const response = await fetch('/api/current-city/');
+                    const data = await response.json();
+                    cityId = data.city_id;
+                    cityName = data.city_name;
+
+                    if (cityId) {
+                        localStorage.setItem('currentCityId', cityId);
+                        localStorage.setItem('currentCity', cityName);
+                    }
+                } catch(e) {
+                    console.error('Ошибка получения города:', e);
+                }
+            }
+
+            // Fallback
+            cityId = cityId || 'Bergen';
+            cityName = cityName || 'Город';
+
+            // Название
+            document.getElementById('cityName').textContent = '🏰 ' + cityName;
+
+            // Фон
+            const bgLocation = CITY_BACKGROUNDS[cityId] || 'city_magic';
+
+            // Лиара
+            const tips = [
+                `Добро пожаловать в ${cityName}!`,
+                'Сила влияет на урон и здоровье.',
+                'Ловкость увеличивает уклонение.',
+                'Интеллект влияет на магию и ману.',
+            ];
+
+            const visited = localStorage.getItem('cityVisited');
+            if (!visited) {
+                document.getElementById('liaraText').textContent =
+                    'Привет! Я Лиара, твой ассистент. Если хочешь что-то узнать — спроси!';
+                localStorage.setItem('cityVisited', 'true');
+            } else {
+                document.getElementById('liaraText').textContent =
+                    tips[Math.floor(Math.random() * tips.length)];
+            }
         }
-    </script>
 
-    <script>
-        // Пока заглушка — потом загрузим из API
-        const cityName = localStorage.getItem('currentCity') || 'Город';
-        document.getElementById('cityName').textContent = '🏰 ' + cityName;
-
-        // Случайная подсказка Лиары
-        const tips = [
-            'Добро пожаловать! Я Лиара, твой ассистент. Я буду сопровождать тебя повсюду.',
-            'Сила влияет не только на урон атаки, но и на твоё здоровье.',
-            'Ловкость увеличивает шанс уклонения от атак врагов.',
-            'Интеллект влияет на урон магических навыков и запас маны.',
-            'Не забывай тренироваться в Круге Великих — там можно улучшить характеристики.',
-            'В таверне можно не только отдохнуть, но и купить провиант перед долгим путешествием.',
-        ];
-
-        // Первый раз — приветствие, потом — случайная подсказка
-        const visited = localStorage.getItem('cityVisited');
-        if (!visited) {
-            document.getElementById('liaraText').textContent =
-                'Привет! Я Лиара, твой ассистент. Я буду сопровождать тебя повсюду. Если хочешь что-нибудь узнать — просто спроси меня!';
-            localStorage.setItem('cityVisited', 'true');
-        } else {
-            document.getElementById('liaraText').textContent = tips[Math.floor(Math.random() * tips.length)];
-        }
+        init();
     </script>
     <script src="/static/js/autosave.js"></script>
-    <script>
-        // Автосохранение при уходе со страницы
-        window.addEventListener('beforeunload', () => autosave());
-
-        // Или автосохранение каждые 30 секунд
-        setInterval(() => autosave(), 30000);
-    </script>
-    <script src="/static/js/autosave.js"></script>
+    <script src="/static/js/city_bg.js"></script>
     <script src="/static/js/navbar.js"></script>
 </body>
 </html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингар — Продажа предметов</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        h1 {
+            font-size: 24px;
+            color: #f0c040;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.9);
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+        .gold-display {
+            background: rgba(26, 26, 46, 0.95);
+            border-radius: 8px;
+            padding: 12px 20px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: #f0c040;
+            font-weight: bold;
+        }
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .item-card {
+            background: rgba(26, 26, 46, 0.95);
+            border: 1px solid #2a2a4e;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .item-icon { font-size: 28px; }
+        .item-info { flex-grow: 1; }
+        .item-name { font-size: 14px; font-weight: bold; color: #e0e0e0; }
+        .item-qty { font-size: 11px; color: #888; margin-top: 2px; }
+        .item-price { font-size: 13px; color: #f0c040; font-weight: bold; }
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            background: #2a6e2a;
+            color: white;
+        }
+        .btn:hover { background: #358535; }
+        .btn-back {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background: rgba(51, 51, 51, 0.95);
+            color: #ccc;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+        }
+        .btn-back:hover { background: rgba(68, 68, 68, 0.95); }
+        .success-msg {
+            text-align: center;
+            color: #5e5;
+            font-size: 13px;
+            margin-top: 10px;
+            min-height: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="bg" style="position:fixed; inset:0; z-index:-1;"></div>
+
+    <div class="container">
+        <h1>💰 ПРОДАЖА ПРЕДМЕТОВ</h1>
+        <p class="subtitle">Запредельщики купят твои находки</p>
+
+        <div class="gold-display" id="goldDisplay">💰 0 золота</div>
+
+        <div class="items-list" id="itemsList"></div>
+
+        <div class="success-msg" id="successMsg"></div>
+
+        <a href="/circle-of-access/" class="btn-back">← Вернуться в Круг доступа</a>
+    </div>
+
+    <script src="/static/js/pixelbg.all.js"></script>
+    <script>
+        let playerGold = 0;
+        let itemsData = {};
+
+        async function loadInventory() {
+            try {
+                const response = await fetch('/api/player/stats/');
+                const data = await response.json();
+
+                playerGold = data.gold;
+                itemsData = data.items_data || {};
+
+                document.getElementById('goldDisplay').textContent = `💰 ${playerGold} золота`;
+
+                const inventory = data.inventory || {items: []};
+                renderInventory(inventory.items);
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        function renderInventory(items) {
+            const container = document.getElementById('itemsList');
+            container.innerHTML = '';
+
+            if (!items || items.length === 0) {
+                container.innerHTML = '<div style="text-align:center;color:#666;padding:20px;">Инвентарь пуст</div>';
+                return;
+            }
+
+            items.forEach(item => {
+                const itemData = itemsData[item.id] || item;
+                const sellPrice = Math.floor((itemData.price || 10) / 2);
+
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <div class="item-icon">${itemData.icon || '📦'}</div>
+                    <div class="item-info">
+                        <div class="item-name">${itemData.name || item.id}</div>
+                        <div class="item-qty">Кол-во: ${item.quantity || 1}</div>
+                    </div>
+                    <div class="item-price">${sellPrice}💰</div>
+                    <button class="btn" onclick="sellItem('${item.id}', ${sellPrice})">Продать</button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function sellItem(itemId, price) {
+            try {
+                const response = await fetch('/api/sell-item/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken(),
+                    },
+                    body: JSON.stringify({item_id: itemId, price: price}),
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess(`✅ Продано за ${price} золота`);
+                    await loadInventory();
+                } else {
+                    showSuccess('❌ ' + data.message);
+                }
+            } catch(e) {
+                showSuccess('❌ Ошибка');
+            }
+        }
+
+        function showSuccess(msg) {
+            const el = document.getElementById('successMsg');
+            el.textContent = msg;
+            setTimeout(() => el.textContent = '', 2000);
+        }
+
+        function getCsrfToken() {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, 10) === ('csrftoken=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(10));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        loadInventory();
+    </script>
+
+    <script src="/static/js/city_bg.js"></script>
+    <script src="/static/js/navbar.js"></script>
+</body>
+</html>

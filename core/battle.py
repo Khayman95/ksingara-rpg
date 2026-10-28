@@ -23,6 +23,12 @@ class BattleSystem:
         # Кулдауны игрока
         self.player_cooldowns = {}  # {skill_id: remaining}
 
+        # Стартовые кулдауны для всех навыков
+        self._apply_start_cooldowns()
+
+        # Сбрасываем таймеры врагов
+        for enemy in enemies:
+            enemy.attack_timer = 0
         self.add_log(f"⚔️ Бой начался! Врагов: {len(enemies)}")
         for e in enemies:
             self.add_log(f"  • {e.icon} {e.name} ({e.element}) — ❤️{e.hp}")
@@ -33,6 +39,61 @@ class BattleSystem:
         # Ограничиваем лог 50 сообщениями
         if len(self.log) > 50:
             self.log = self.log[-50:]
+
+    def _apply_start_cooldowns(self):
+        """Все навыки при старте боя на кулдауне"""
+        if not self.player.weapon:
+            return
+
+        weapon_speed = self.player.weapon.get('speed', 2)
+
+        # Таблица: скорость → базовый кулдаун
+        base_cooldowns = {
+            1: 6.0,  # медленное оружие
+            2: 5.0,  # среднее
+            3: 4.0,  # быстрое
+        }
+        base_cooldown = base_cooldowns.get(weapon_speed, 5.0)
+
+        # Навыки оружия
+        for skill_id in self.player.weapon_skills.keys():
+            skill = db.get_weapon_skill(skill_id)
+            if not skill:
+                continue
+
+            path = self.player.weapon_skills[skill_id].get('path')
+            if path and self._path_has_start_bonus(path, 'weapon'):
+                continue
+
+            cooldown = base_cooldown * skill['cooldown_multiplier']
+            self.player_cooldowns[skill_id] = cooldown
+
+        # Заклинания
+        for spell_id in self.player.element_spells.keys():
+            spell = db.get_element_spell(spell_id)
+            if not spell:
+                continue
+
+            path = self.player.element_spells[spell_id].get('path')
+            if path and self._path_has_start_bonus(path, 'spell'):
+                continue
+
+            cooldown = base_cooldown * spell['cooldown_multiplier']
+            self.player_cooldowns[spell_id] = cooldown
+
+    def _path_has_start_bonus(self, path_id, skill_type):
+        """Проверяет, даёт ли путь старт без кулдауна"""
+        table = 'weapon_skill_paths' if skill_type == 'weapon' else 'spell_paths'
+        cursor = db.conn.cursor()
+        try:
+            cursor.execute(
+                f"SELECT start_without_cooldown FROM {table} WHERE path_id = ?",
+                (path_id,)
+            )
+            row = cursor.fetchone()
+            return row and row['start_without_cooldown'] == 1
+        except:
+            return False
 
     # ============ ОБНОВЛЕНИЕ БОЯ ============
 
@@ -63,7 +124,7 @@ class BattleSystem:
             if enemy.hp <= 0:
                 continue
 
-            # DOT врага
+            # DOT
             enemy_dot = enemy.effects.update(dt)
             if enemy_dot > 0:
                 damage, killed = enemy.take_damage(enemy_dot, is_dot=True)
@@ -72,7 +133,7 @@ class BattleSystem:
                     self.add_log(f"💀 {enemy.name} погиб от эффекта!")
                     continue
 
-            # Получаем действие заранее (для расчёта кулдауна)
+            # Действие + кулдаун
             action = enemy.choose_action()
             if not action:
                 continue
@@ -80,7 +141,6 @@ class BattleSystem:
             skill = action['skill']
             cooldown = enemy.attack_cooldown * skill['cooldown_multiplier']
 
-            # Обновляем таймер
             speed_mult = enemy.effects.get_speed_multiplier()
             enemy.attack_timer += dt * speed_mult
 
@@ -226,8 +286,7 @@ class BattleSystem:
     # ============ АТАКА ВРАГА ============
 
     def _enemy_attack(self, enemy, action=None):
-        """Враг атакует (action передаётся из update)"""
-        # Проверка контроля врага
+        """Враг атакует"""
         if not enemy.effects.can_attack('weapon'):
             self.add_log(f"⏸️ {enemy.name} не может атаковать!")
             return
@@ -239,9 +298,9 @@ class BattleSystem:
 
         skill = action['skill']
 
-        # Расчёт урона со штрафом −50%
+        # Урон со штрафом −70%
         base_damage = skill['base_damage'] + enemy.damage
-        final_damage = int(base_damage * 0.5)
+        final_damage = int(base_damage * 0.3)
 
         # Уклонение игрока
         dodge = self.player.dodge + self.player.effects.get_dodge_bonus()
@@ -456,6 +515,7 @@ current_battle = None
 def start_battle(enemies_ids):
     """Начинает бой с врагами по ID"""
     global current_battle
+    from core.enemy import Enemy
     enemies = [Enemy(eid) for eid in enemies_ids]
     current_battle = BattleSystem(enemies)
     return current_battle

@@ -12,35 +12,42 @@
             font-family: 'Segoe UI', sans-serif;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
+            padding: 15px;
         }
-        .container {
-            max-width: 500px;
-            width: 100%;
-            padding: 20px;
-        }
+        .container { max-width: 600px; width: 100%; position: relative; z-index: 1; }
+
         h1 {
             font-size: 24px;
             color: #f0c040;
             text-align: center;
             margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.9);
         }
+        h2 {
+            font-size: 16px;
+            color: #ccc;
+            margin-bottom: 10px;
+            margin-top: 15px;
+        }
+
         .dummy {
             text-align: center;
             font-size: 80px;
             margin-bottom: 20px;
-            animation: shake 0.1s ease-in-out;
+            animation: none;
         }
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             25% { transform: translateX(-5px); }
             75% { transform: translateX(5px); }
         }
+
         .damage-display {
-            background: #1a1a2e;
+            background: rgba(26, 26, 46, 0.95);
             border-radius: 12px;
-            padding: 25px;
+            padding: 20px;
             text-align: center;
             margin-bottom: 20px;
             min-height: 100px;
@@ -59,165 +66,424 @@
             color: #888;
             margin-top: 5px;
         }
-        .skills-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
+
+        .hp-bar-container {
+            background: rgba(26, 26, 46, 0.95);
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
         }
-        .skill-card {
-            background: #1a1a2e;
+        .hp-bar {
+            height: 16px;
+            background: #0a0a0f;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+        .hp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #cc3333, #ff5555);
+            border-radius: 8px;
+            transition: width 0.3s;
+        }
+        .hp-text {
+            font-size: 12px;
+            color: #aaa;
+            text-align: center;
+        }
+
+        .weapons-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .weapon-card {
+            background: rgba(26, 26, 46, 0.95);
             border: 2px solid #2a2a4e;
-            border-radius: 10px;
-            padding: 15px;
+            border-radius: 8px;
+            padding: 10px 5px;
             cursor: pointer;
             text-align: center;
             transition: all 0.2s;
         }
-        .skill-card:hover {
+        .weapon-card:hover {
+            border-color: #4a6a9e;
+            background: rgba(30, 30, 56, 0.95);
+        }
+        .weapon-card.selected {
             border-color: #f0c040;
-            background: #1e1e38;
+            background: rgba(46, 42, 26, 0.95);
         }
-        .skill-card.selected {
-            border-color: #ff5544;
-            background: #2a1a1e;
+        .weapon-icon { font-size: 28px; margin-bottom: 4px; }
+        .weapon-name { font-size: 10px; font-weight: bold; color: #e0e0e0; }
+        .weapon-stats { font-size: 9px; color: #888; margin-top: 2px; }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-bottom: 15px;
         }
-        .skill-icon {
-            font-size: 32px;
-            margin-bottom: 5px;
-        }
-        .skill-name {
-            font-size: 14px;
-            font-weight: bold;
+        .skill-btn {
+            background: rgba(26, 46, 26, 0.95);
+            border: 2px solid #4a6e4a;
+            border-radius: 6px;
+            padding: 10px 5px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 12px;
             color: #e0e0e0;
         }
-        .skill-cost {
-            font-size: 11px;
-            color: #888;
-            margin-top: 3px;
+        .skill-btn:hover {
+            border-color: #f0c040;
+            background: rgba(46, 62, 42, 0.95);
         }
-        .btn {
+
+        .btn-confirm {
             display: block;
             width: 100%;
-            padding: 14px;
+            padding: 15px;
+            background: #2a6e2a;
+            color: white;
             border: none;
             border-radius: 8px;
-            font-size: 18px;
+            font-size: 16px;
+            font-weight: bold;
             cursor: pointer;
-            transition: background 0.2s;
             margin-bottom: 10px;
         }
-        .btn-hit {
-            background: #cc3322;
-            color: white;
-        }
-        .btn-hit:hover { background: #dd4433; }
-        .btn-hit:disabled {
+        .btn-confirm:hover { background: #358535; }
+        .btn-confirm:disabled {
             background: #333;
             color: #666;
             cursor: not-allowed;
         }
+
         .btn-back {
-            background: #333;
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: rgba(51, 51, 51, 0.95);
             color: #ccc;
-        }
-        .btn-back:hover { background: #444; }
-        .info-text {
-            font-size: 12px;
-            color: #666;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
             text-align: center;
-            margin-top: 5px;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+        .btn-back:hover { background: rgba(68, 68, 68, 0.95); }
+
+        .warning {
+            background: rgba(62, 42, 26, 0.95);
+            border: 1px solid #6e4a2a;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #f0c040;
+            text-align: center;
+        }
+
+        .success-msg {
+            text-align: center;
+            color: #5e5;
+            font-size: 14px;
+            margin-top: 10px;
+            min-height: 20px;
         }
     </style>
 </head>
 <body>
+    <div id="bg" style="position:fixed; inset:0; z-index:-1;"></div>
+
     <div class="container">
         <h1>🎯 ТРЕНИРОВОЧНЫЙ МАНЕКЕН</h1>
 
-        <!-- Манекен -->
-        <div class="dummy" id="dummy">🗿</div>
+        <!-- ============ РЕЖИМ 1: ВЫБОР ОРУЖИЯ ============ -->
+        <div id="noWeaponView" style="display:none;">
+            <div class="warning">
+                ⚠️ Попробуй все оружия! Выбор — окончательный.
+            </div>
 
-        <!-- Отображение урона -->
-        <div class="damage-display">
-            <div class="damage-number" id="damageNumber">0</div>
-            <div class="damage-label" id="damageLabel">Выбери навык и ударь</div>
+            <div class="dummy">🗿</div>
+
+            <div class="damage-display">
+                <div class="damage-number" id="damageNumber">0</div>
+                <div class="damage-label" id="damageLabel">Выбери оружие и навык</div>
+            </div>
+
+            <h2>⚔️ Выбери оружие для пробы</h2>
+            <div class="weapons-grid" id="weaponsGrid"></div>
+
+            <h2>🎯 Навыки выбранного оружия</h2>
+            <div class="skills-grid" id="skillsGrid">
+                <div style="text-align:center;color:#666;padding:20px;grid-column:1/-1;">
+                    Сначала выбери оружие
+                </div>
+            </div>
+
+            <button class="btn-confirm" id="confirmBtn" disabled onclick="confirmWeapon()">
+                ✅ ВЫБРАТЬ ЭТО ОРУЖИЕ НАВСЕГДА
+            </button>
         </div>
 
-        <!-- Навыки -->
-        <div class="skills-grid" id="skillsGrid"></div>
+        <!-- ============ РЕЖИМ 2: ТРЕНИРОВКА ============ -->
+        <div id="hasWeaponView" style="display:none;">
+            <div class="warning">
+                ✅ Оружие выбрано. Тренируйся сколько хочешь!
+            </div>
 
-        <!-- Кнопка удара -->
-        <button class="btn btn-hit" id="hitBtn" disabled onclick="hitDummy()">
-            ⚔️ УДАРИТЬ
-        </button>
+            <div class="dummy" id="dummyEnemy">🗿</div>
 
-        <button class="btn btn-back" onclick="window.location.href='/circle-of-blades/'">
-            ← Вернуться в Круг Клинков
-        </button>
+            <div class="hp-bar-container">
+                <div class="hp-bar">
+                    <div class="hp-fill" id="dummyHpFill" style="width: 100%"></div>
+                </div>
+                <div class="hp-text">Манекен: <span id="dummyHpText">∞</span></div>
+            </div>
 
-        <div class="info-text">Манекен показывает урон без риска для здоровья</div>
+            <div class="damage-display">
+                <div class="damage-number" id="damageNumberT">0</div>
+                <div class="damage-label" id="damageLabelT">Выбери навык и ударь</div>
+            </div>
+
+            <h2>⚔️ Твои навыки оружия</h2>
+            <div class="skills-grid" id="skillsGridHasWeapon"></div>
+
+            <a href="/character/" class="btn-confirm" style="text-decoration:none;text-align:center;background:#2a5a8e;">
+                ⚔️ Открыть Арсенал
+            </a>
+        </div>
+
+        <div class="success-msg" id="successMsg"></div>
+
+        <a href="/circle-of-blades/" class="btn-back">← Вернуться в Круг Клинков</a>
     </div>
 
     <script>
-        // Навыки игрока (заглушка — потом из API)
-        const skills = [
-            { id: 'power_strike', name: 'Мощный удар', icon: '⚔️', damage: 15, type: 'physical' },
-            { id: 'fireball', name: 'Огненный шар', icon: '🔥', damage: 20, type: 'magic' },
-            { id: 'water_blade', name: 'Водяной клинок', icon: '💧', damage: 12, type: 'magic' },
-            { id: 'earth_shield', name: 'Земляной щит', icon: '🛡️', damage: 5, type: 'magic' },
-        ];
+        let currentWeapon = null;
+        let currentSkills = [];
+        let hasWeapon = false;
 
-        let selectedSkill = null;
-        const dummy = document.getElementById('dummy');
-        const damageNumber = document.getElementById('damageNumber');
-        const damageLabel = document.getElementById('damageLabel');
-        const hitBtn = document.getElementById('hitBtn');
-        const skillsGrid = document.getElementById('skillsGrid');
+        const WEAPON_ICONS = {
+            'dagger': '🗡️', 'rapier': '⚔️', 'battle_axe': '🪓',
+            'crystal_wand': '🔮', 'whip': '🪢', 'claymore': '⚔️',
+            'war_hammer': '🔨', 'storm_staff': '⚡', 'dual_blades': '🗡️',
+        };
 
-        // Отрисовка навыков
-        skills.forEach(skill => {
-            const card = document.createElement('div');
-            card.className = 'skill-card';
-            card.innerHTML = `
-                <div class="skill-icon">${skill.icon}</div>
-                <div class="skill-name">${skill.name}</div>
-                <div class="skill-cost">${skill.type === 'physical' ? 'Физический' : 'Магический'}</div>
-            `;
-            card.onclick = () => selectSkill(skill, card);
-            skillsGrid.appendChild(card);
-        });
-
-        function selectSkill(skill, card) {
-            document.querySelectorAll('.skill-card').forEach(c => c.classList.remove('selected'));
-            card.classList.add('selected');
-            selectedSkill = skill;
-            hitBtn.disabled = false;
-            damageNumber.textContent = '0';
-            damageLabel.textContent = `Выбран: ${skill.name}`;
+        function getCsrfToken() {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, 10) === ('csrftoken=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(10));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
         }
 
-        function hitDummy() {
-            if (!selectedSkill) return;
+        async function init() {
+            const response = await fetch('/api/player/stats/');
+            const data = await response.json();
 
-            // Анимация удара
+            hasWeapon = data.weapon !== null && data.weapon !== undefined;
+
+            if (hasWeapon) {
+                document.getElementById('hasWeaponView').style.display = 'block';
+                document.getElementById('dummyHpText').textContent = '∞';
+                await loadWeaponSkillsForTraining();
+            } else {
+                document.getElementById('noWeaponView').style.display = 'block';
+                await loadWeapons();
+            }
+        }
+
+        // ============ РЕЖИМ 1: ВЫБОР ОРУЖИЯ ============
+
+        async function loadWeapons() {
+            const response = await fetch('/api/weapons/all/');
+            const data = await response.json();
+            const weapons = data.weapons || [];
+
+            const grid = document.getElementById('weaponsGrid');
+            grid.innerHTML = '';
+
+            weapons.forEach(w => {
+                const card = document.createElement('div');
+                card.className = 'weapon-card';
+                card.innerHTML = `
+                    <div class="weapon-icon">${w.icon}</div>
+                    <div class="weapon-name">${w.name}</div>
+                    <div class="weapon-stats">⚡${w.speed} ⚔️${w.physical} ✨${w.magic}</div>
+                `;
+                card.onclick = () => selectWeaponForTry(w);
+                grid.appendChild(card);
+            });
+        }
+
+        async function selectWeaponForTry(weapon) {
+            currentWeapon = weapon;
+
+            document.querySelectorAll('.weapon-card').forEach(c => c.classList.remove('selected'));
+            event.target.closest('.weapon-card').classList.add('selected');
+
+            const response = await fetch(`/api/weapons/${weapon.id}/skills/`);
+            const data = await response.json();
+            currentSkills = data.skills || [];
+
+            renderSkillsForTry();
+            document.getElementById('confirmBtn').disabled = false;
+        }
+
+        function renderSkillsForTry() {
+            const grid = document.getElementById('skillsGrid');
+            grid.innerHTML = '';
+
+            currentSkills.forEach(skill => {
+                const btn = document.createElement('div');
+                btn.className = 'skill-btn';
+                btn.innerHTML = `
+                    <div>${skill.icon || '⚔️'}</div>
+                    <div style="font-size:11px;margin-top:3px;">${skill.name}</div>
+                `;
+                btn.onclick = () => tryHitForTry(skill);
+                grid.appendChild(btn);
+            });
+        }
+
+        async function tryHitForTry(skill) {
+            if (!currentWeapon) return;
+
+            const response = await fetch('/api/dummy/try-weapon/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                body: JSON.stringify({
+                    weapon_type: currentWeapon.id,
+                    skill_id: skill.id,
+                }),
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                document.getElementById('damageNumber').textContent = data.damage;
+                document.getElementById('damageNumber').style.color = data.is_crit ? '#ffaa00' : '#ff5544';
+                document.getElementById('damageLabel').textContent =
+                    `${data.weapon_name} → ${data.skill_name}${data.is_crit ? ' (КРИТ!)' : ''}`;
+            }
+        }
+
+        async function confirmWeapon() {
+            if (!currentWeapon) return;
+
+            if (!confirm(`Выбрать "${currentWeapon.name}" НАВСЕГДА?\n\nЭто решение нельзя изменить!`)) {
+                return;
+            }
+
+            const response = await fetch('/api/player/choose-weapon/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                },
+                body: JSON.stringify({ weapon_type: currentWeapon.id }),
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                document.getElementById('successMsg').textContent = '✅ ' + data.message;
+                document.getElementById('successMsg').style.color = '#5e5';
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                document.getElementById('successMsg').textContent = '❌ ' + data.message;
+                document.getElementById('successMsg').style.color = '#e55';
+            }
+        }
+
+        // ============ РЕЖИМ 2: ТРЕНИРОВКА ============
+
+        async function loadWeaponSkillsForTraining() {
+            try {
+                const response = await fetch('/api/arsenal/data/');
+                const data = await response.json();
+                const skills = data.skills || [];
+
+                const grid = document.getElementById('skillsGridHasWeapon');
+                grid.innerHTML = '';
+
+                if (!skills.length) {
+                    grid.innerHTML = '<div style="text-align:center;color:#666;padding:20px;grid-column:1/-1;">Нет навыков</div>';
+                    return;
+                }
+
+                skills.forEach(skill => {
+                    const btn = document.createElement('div');
+                    btn.className = 'skill-btn';
+                    btn.innerHTML = `
+                        <div>${skill.icon || '⚔️'}</div>
+                        <div style="font-size:11px;margin-top:3px;">${skill.name}</div>
+                        <div style="font-size:9px;color:#f0c040;">Ур. ${skill.level}</div>
+                    `;
+                    btn.onclick = () => tryHitHasWeapon(skill);
+                    grid.appendChild(btn);
+                });
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        async function tryHitHasWeapon(skill) {
+            // Анимация манекена
+            const dummy = document.getElementById('dummyEnemy');
             dummy.style.animation = 'none';
-            setTimeout(() => {
-                dummy.style.animation = 'shake 0.1s ease-in-out';
-            }, 10);
+            setTimeout(() => dummy.style.animation = 'shake 0.1s ease-in-out', 10);
 
-            // Расчёт урона (можно позже усложнить)
-            const baseDamage = selectedSkill.damage;
-            const variance = Math.floor(Math.random() * 5) - 2;  // ±2
-            const finalDamage = Math.max(1, baseDamage + variance);
+            try {
+                const response = await fetch('/api/dummy/try-weapon/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken(),
+                    },
+                    body: JSON.stringify({
+                        weapon_type: 'current',
+                        skill_id: skill.id,
+                    }),
+                });
+                const data = await response.json();
 
-            // Отображение
-            damageNumber.textContent = finalDamage;
-            damageNumber.style.color = selectedSkill.type === 'magic' ? '#aa88ff' : '#ff5544';
-            damageLabel.textContent = `Урон навыком "${selectedSkill.name}"`;
+                if (data.success) {
+                    document.getElementById('damageNumberT').textContent = data.damage;
+                    document.getElementById('damageNumberT').style.color = data.is_crit ? '#ffaa00' : '#ff5544';
+                    document.getElementById('damageLabelT').textContent =
+                        `${data.skill_name}${data.is_crit ? ' (КРИТ!)' : ''}`;
+
+                    // HP-бар "дёргается", но не уменьшается
+                    const hpFill = document.getElementById('dummyHpFill');
+                    hpFill.style.width = '50%';
+                    setTimeout(() => hpFill.style.width = '100%', 300);
+
+                    // ❌ ОПЫТ НЕ НАЧИСЛЯЕТСЯ — манекен только для теста!
+                }
+            } catch(e) {
+                console.error(e);
+            }
         }
+
+        init();
     </script>
 
-    <script src="/static/js/autosave.js"></script>
+    <script src="/static/js/pixelbg.all.js"></script>
+    <script src="/static/js/city_bg.js"></script>
     <script src="/static/js/navbar.js"></script>
 </body>
 </html>

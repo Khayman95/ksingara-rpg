@@ -157,7 +157,6 @@ class EffectManager:
         return bonus
 
     def get_crit_bonus(self):
-        """Бонус к шансу крита от эффектов"""
         bonus = 0
         for e in self.effects:
             if e.id == 'crit_buff':
@@ -165,15 +164,20 @@ class EffectManager:
         return bonus
 
     def get_attack_bonus(self):
-        """Бонус к урону от эффектов"""
         bonus = 0
         for e in self.effects:
             if e.id == 'attack_buff':
                 bonus += e.value_percent
         return bonus
 
+    def get_defense_bonus(self):
+        bonus = 0
+        for e in self.effects:
+            if e.id == 'defense_buff':
+                bonus += e.value_percent
+        return bonus
+
     def get_speed_multiplier(self):
-        """Множитель скорости"""
         multiplier = 1.0
         for e in self.effects:
             if e.type == 'slow':
@@ -183,12 +187,18 @@ class EffectManager:
         return max(0.1, multiplier)
 
     def get_damage_multiplier(self):
-        """Множитель получаемого урона"""
         multiplier = 1.0
         for e in self.effects:
             if e.type == 'vulnerability':
                 multiplier += e.value_percent / 100
         return multiplier
+
+    def can_attack(self, attack_type='weapon'):
+        if self.has('stun'):
+            return False
+        if self.has('immobilize') and attack_type == 'weapon':
+            return False
+        return True
 
     def to_dict(self):
         """Для сохранения/отправки на фронт"""

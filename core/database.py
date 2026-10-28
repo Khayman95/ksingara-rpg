@@ -330,6 +330,11 @@ class GameDatabase:
         cursor.execute("SELECT * FROM status_effects")
         return [dict(row) for row in cursor.fetchall()]
 
+    def get_all_weapons(self):
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM weapons")
+        return [dict(row) for row in cursor.fetchall()]
+
     def close(self):
         self.conn.close()
 

@@ -1,10 +1,524 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксингар — Бой</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 15px;
+        }
+        .battle-container { max-width: 600px; width: 100%; }
+
+        .battle-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 15px; padding: 10px 15px;
+            background: #1a1a2e; border-radius: 8px;
+        }
+        .battle-title { font-size: 18px; font-weight: bold; color: #f0c040; }
+        .battle-timer { font-size: 13px; color: #888; }
+
+        .enemies-section { margin-bottom: 15px; }
+        .enemy-card {
+            background: #2a1a1e; border: 2px solid #4a2a2e;
+            border-radius: 8px; padding: 10px; margin-bottom: 8px;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .enemy-card:hover { border-color: #6a3a3e; }
+        .enemy-card.target { border-color: #f0c040; background: #2e2a1a; }
+        .enemy-card.dead { opacity: 0.4; cursor: not-allowed; }
+        .enemy-header {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 6px;
+        }
+        .enemy-name { font-size: 15px; font-weight: bold; color: #ff8888; }
+        .enemy-element {
+            font-size: 11px; color: #888; padding: 2px 8px;
+            background: #1a1a2e; border-radius: 10px;
+        }
+        .enemy-hp-bar {
+            height: 14px; background: #1a1a2e; border-radius: 7px;
+            overflow: hidden; margin-bottom: 4px;
+        }
+        .enemy-hp-fill {
+            height: 100%; background: linear-gradient(90deg, #cc3333, #ff5555);
+            border-radius: 7px; transition: width 0.3s;
+        }
+        .enemy-hp-text { font-size: 11px; color: #aaa; text-align: right; }
+        .enemy-effects { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
+        .effect-icon {
+            font-size: 14px; padding: 2px 6px;
+            background: #1a1a2e; border-radius: 5px; border: 1px solid #333;
+        }
+        .effect-icon .timer { font-size: 10px; color: #f0c040; }
+
+        .player-section {
+            background: #1a2e1a; border: 2px solid #2e4a2e;
+            border-radius: 8px; padding: 12px; margin-bottom: 15px;
+        }
+        .player-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .player-name { font-size: 15px; font-weight: bold; color: #88ff88; }
+        .stat-bar {
+            height: 12px; background: #0a0a0f; border-radius: 6px;
+            overflow: hidden; margin-bottom: 4px;
+        }
+        .hp-bar { background: linear-gradient(90deg, #cc3333, #ff5555); }
+        .mp-bar { background: linear-gradient(90deg, #3355cc, #5588ff); }
+        .stat-fill { height: 100%; border-radius: 6px; transition: width 0.3s; }
+        .stat-text {
+            display: flex; justify-content: space-between;
+            font-size: 11px; color: #aaa; margin-bottom: 6px;
+        }
+        .player-effects { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
+
+        .battle-log {
+            background: #1a1a2e; border-radius: 8px; padding: 12px;
+            margin-bottom: 15px; max-height: 180px; overflow-y: auto;
+            font-size: 13px; line-height: 1.6;
+        }
+        .log-line { color: #aaa; margin-bottom: 3px; }
+        .log-line.damage { color: #ff8888; }
+        .log-line.system { color: #f0c040; }
+        .log-line.crit { color: #ffaa00; font-weight: bold; }
+
+        .skills-section { margin-bottom: 15px; }
+        .skills-title { font-size: 13px; color: #888; margin-bottom: 8px; }
+        .skills-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 8px; margin-bottom: 15px;
+        }
+        .skill-btn {
+            position: relative; background: #1a2e1a;
+            border: 2px solid #4a6e4a; border-radius: 8px;
+            padding: 12px 8px; cursor: pointer; transition: all 0.3s;
+            text-align: center; overflow: hidden;
+        }
+        .skill-btn:hover:not(:disabled) {
+            background: #2a3e2a; border-color: #f0c040;
+        }
+        .skill-btn.on-cooldown {
+            background: #0a0a0f; border-color: #1a1a2e;
+            opacity: 0.6; filter: grayscale(100%);
+            cursor: not-allowed;
+        }
+        .skill-btn:disabled { cursor: not-allowed; }
+        .skill-icon { font-size: 24px; margin-bottom: 4px; }
+        .skill-name { font-size: 12px; font-weight: bold; color: #e0e0e0; margin-bottom: 2px; }
+        .skill-cost { font-size: 10px; color: #88aaff; }
+        .skill-cooldown-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .cooldown-timer {
+            font-size: 16px; font-weight: bold; color: #f0c040;
+        }
+        .cooldown-progress {
+            position: absolute; bottom: 0; left: 0; height: 4px;
+            background: #f0c040; transition: width 0.2s linear;
+        }
+
+        .controls { display: flex; gap: 10px; }
+        .btn {
+            flex: 1; padding: 12px; border: none; border-radius: 8px;
+            font-size: 14px; font-weight: bold; cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-escape { background: #6e4a2a; color: white; }
+        .btn-escape:hover { background: #8e5a3a; }
+        .btn-leave { background: #333; color: #ccc; }
+        .btn-leave:hover { background: #444; }
+
+        .result-overlay {
+            display: none; position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            justify-content: center; align-items: center; z-index: 100;
+        }
+        .result-overlay.active { display: flex; }
+        .result-box {
+            background: #1a1a2e; border: 3px solid #f0c040;
+            border-radius: 12px; padding: 30px;
+            text-align: center; max-width: 400px;
+        }
+        .result-title { font-size: 32px; font-weight: bold; margin-bottom: 15px; }
+        .result-title.victory { color: #88ff88; }
+        .result-title.defeat { color: #ff8888; }
+        .result-info {
+            font-size: 14px; color: #aaa; margin-bottom: 20px; line-height: 1.6;
+        }
+        .result-btn {
+            padding: 12px 30px; background: #2a5a8e; color: white;
+            border: none; border-radius: 8px; font-size: 16px; cursor: pointer;
+        }
+        .result-btn:hover { background: #356a9e; }
+    </style>
 </head>
 <body>
+    <div class="battle-container">
+        <div class="battle-header">
+            <div class="battle-title">⚔️ БОЙ</div>
+            <div class="battle-timer" id="battleTimer">0.0 сек</div>
+        </div>
 
+        <div class="enemies-section" id="enemiesSection"></div>
+        <div class="player-section" id="playerSection"></div>
+        <div class="battle-log" id="battleLog"></div>
+
+        <div class="skills-section">
+            <div class="skills-title">⚔️ Навыки оружия</div>
+            <div class="skills-grid" id="weaponSkills"></div>
+        </div>
+
+        <div class="skills-section">
+            <div class="skills-title">✨ Заклинания стихии</div>
+            <div class="skills-grid" id="elementSpells"></div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-escape" onclick="tryEscape()">🏃 Сбежать</button>
+            <button class="btn btn-leave" onclick="leaveBattle()">🚪 Выйти</button>
+        </div>
+    </div>
+
+    <div class="result-overlay" id="resultOverlay">
+        <div class="result-box">
+            <div class="result-title" id="resultTitle"></div>
+            <div class="result-info" id="resultInfo"></div>
+            <button class="result-btn" onclick="leaveBattle()">Продолжить</button>
+        </div>
+    </div>
+
+    <script>
+        let battleState = null;
+        let gameLoop = null;
+        let currentTargetIndex = 0;
+        let playerSkills = [];
+        let playerSpells = [];
+
+        const ELEMENT_ICONS = {
+            'fire': '🔥', 'water': '💧', 'wind': '💨',
+            'boiling_shadow': '🌑', 'plasma': '⚡', 'ice': '❄️',
+            'storm': '🌩️', 'crystal_storm': '💎', 'phoenix_blood': '🩸'
+        };
+
+        const ELEMENT_NAMES = {
+            'fire': 'Огонь', 'water': 'Вода', 'wind': 'Ветер',
+            'boiling_shadow': 'Кипящая Тень', 'plasma': 'Плазма', 'ice': 'Лёд',
+            'storm': 'Молния', 'crystal_storm': 'Хрустальная Буря', 'phoenix_blood': 'Кровь Феникса'
+        };
+
+        async function startBattle() {
+            const enemies = JSON.parse(localStorage.getItem('battleEnemies') || '["glass_wasp", "shadow_whisper"]');
+
+            try {
+                const response = await fetch('/api/battle/start/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({enemies: enemies}),
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    battleState = data.state;
+                    await loadPlayerSkills();
+                    render();
+                    startGameLoop();
+                } else {
+                    alert('Ошибка старта боя');
+                }
+            } catch(e) {
+                console.error('Ошибка:', e);
+                alert('Не удалось подключиться к серверу');
+            }
+        }
+
+        async function loadPlayerSkills() {
+            // Заглушка — потом из API
+            playerSkills = [
+                {id: 'claymore_straight', name: 'Прямой удар', icon: '⚔️', mana: 8, cooldown: 2.0},
+                {id: 'claymore_rising', name: 'Восходящий удар', icon: '⬆️', mana: 12, cooldown: 2.6},
+                {id: 'claymore_parry', name: 'Парирующий', icon: '🛡️', mana: 14, cooldown: 2.4},
+            ];
+
+            playerSpells = [
+                {id: 'fire_fist', name: 'Огненный кулак', icon: '👊', mana: 10, cooldown: 2.0},
+                {id: 'fire_bullet', name: 'Огненная пуля', icon: '🔥', mana: 8, cooldown: 1.8},
+                {id: 'fire_pillar', name: 'Огненный столб', icon: '🌋', mana: 18, cooldown: 2.8},
+            ];
+        }
+
+        function startGameLoop() {
+            if (gameLoop) clearInterval(gameLoop);
+
+            gameLoop = setInterval(async () => {
+                if (!battleState || battleState.is_over) {
+                    clearInterval(gameLoop);
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/battle/tick/', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({dt: 0.2}),
+                    });
+                    const data = await response.json();
+
+                    if (data && !data.error) {
+                        battleState = data;
+                        render();
+                        checkBattleEnd();
+                    }
+                } catch(e) {
+                    console.log('Tick error:', e);
+                }
+            }, 200);
+        }
+
+        function render() {
+            if (!battleState) return;
+            renderEnemies();
+            renderPlayer();
+            renderLog();
+            renderWeaponSkills();
+            renderElementSpells();
+            document.getElementById('battleTimer').textContent =
+                `${battleState.elapsed || 0} сек`;
+        }
+
+        function renderEnemies() {
+            const container = document.getElementById('enemiesSection');
+            container.innerHTML = '';
+
+            battleState.enemies.forEach((enemy, index) => {
+                const card = document.createElement('div');
+                card.className = 'enemy-card';
+                if (enemy.hp <= 0) card.classList.add('dead');
+                if (enemy.is_target && enemy.hp > 0) card.classList.add('target');
+
+                const hpPercent = (enemy.hp / enemy.max_hp) * 100;
+                const elementIcon = ELEMENT_ICONS[enemy.element] || '❓';
+
+                let effectsHtml = '';
+                if (enemy.effects && enemy.effects.length > 0) {
+                    effectsHtml = '<div class="enemy-effects">' +
+                        enemy.effects.map(e =>
+                            `<span class="effect-icon">${e.icon}<span class="timer"> ${e.remaining}s</span></span>`
+                        ).join('') + '</div>';
+                }
+
+                card.innerHTML = `
+                    <div class="enemy-header">
+                        <span class="enemy-name">${enemy.icon} ${enemy.name}</span>
+                        <span class="enemy-element">${elementIcon} ${ELEMENT_NAMES[enemy.element] || '?'}</span>
+                    </div>
+                    <div class="enemy-hp-bar">
+                        <div class="enemy-hp-fill" style="width:${hpPercent}%"></div>
+                    </div>
+                    <div class="enemy-hp-text">${Math.max(0, enemy.hp)} / ${enemy.max_hp} HP</div>
+                    ${effectsHtml}
+                `;
+
+                if (enemy.hp > 0) {
+                    card.onclick = () => selectTarget(index);
+                }
+
+                container.appendChild(card);
+            });
+        }
+
+        function renderPlayer() {
+            const container = document.getElementById('playerSection');
+            const p = battleState.player;
+
+            const hpPercent = (p.hp / p.max_hp) * 100;
+            const mpPercent = (p.mp / p.max_mp) * 100;
+
+            let effectsHtml = '';
+            if (p.effects && p.effects.length > 0) {
+                effectsHtml = '<div class="player-effects">' +
+                    p.effects.map(e =>
+                        `<span class="effect-icon">${e.icon}<span class="timer"> ${e.remaining}s</span></span>`
+                    ).join('') + '</div>';
+            }
+
+            container.innerHTML = `
+                <div class="player-header">
+                    <span class="player-name">🧙 Ты</span>
+                </div>
+                <div class="stat-bar">
+                    <div class="stat-fill hp-bar" style="width:${hpPercent}%"></div>
+                </div>
+                <div class="stat-text">
+                    <span>❤️ HP</span><span>${p.hp} / ${p.max_hp}</span>
+                </div>
+                <div class="stat-bar">
+                    <div class="stat-fill mp-bar" style="width:${mpPercent}%"></div>
+                </div>
+                <div class="stat-text">
+                    <span>💙 MP</span><span>${p.mp} / ${p.max_mp}</span>
+                </div>
+                ${effectsHtml}
+            `;
+        }
+
+        function renderLog() {
+            const container = document.getElementById('battleLog');
+            const log = battleState.log || [];
+
+            container.innerHTML = log.map(line => {
+                let cls = 'log-line';
+                if (line.includes('КРИТ')) cls += ' crit';
+                else if (line.includes('ПОБЕДА') || line.includes('ПОРАЖЕНИЕ') || line.includes('повержен')) cls += ' system';
+                else if (line.includes('→') && line.includes('-')) cls += ' damage';
+                return `<div class="${cls}">${line}</div>`;
+            }).join('');
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function renderSkills(skills, containerId) {
+            const container = document.getElementById(containerId);
+            const cooldowns = battleState.player.cooldowns || {};
+            const mp = battleState.player.mp;
+
+            container.innerHTML = skills.map(skill => {
+                const cd = cooldowns[skill.id] || 0;
+                const isReady = cd <= 0 && mp >= skill.mana;
+                const percent = cd > 0 ? Math.min(100, (cd / skill.cooldown) * 100) : 0;
+
+                return `
+                    <button class="skill-btn ${isReady ? '' : 'on-cooldown'}"
+                            onclick="useSkill('${skill.id}', '${containerId === 'weaponSkills' ? 'weapon' : 'spell'}')"
+                            ${!isReady ? 'disabled' : ''}>
+                        <div class="skill-icon">${skill.icon}</div>
+                        <div class="skill-name">${skill.name}</div>
+                        <div class="skill-cost">💙 ${skill.mana}</div>
+                        ${cd > 0 ? `
+                            <div class="skill-cooldown-overlay">
+                                <div class="cooldown-timer">${cd.toFixed(1)}s</div>
+                            </div>
+                            <div class="cooldown-progress" style="width:${percent}%"></div>
+                        ` : ''}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function renderWeaponSkills() {
+            renderSkills(playerSkills, 'weaponSkills');
+        }
+
+        function renderElementSpells() {
+            renderSkills(playerSpells, 'elementSpells');
+        }
+
+        async function useSkill(skillId, type) {
+            if (!battleState || battleState.is_over) return;
+
+            const endpoint = type === 'weapon' ? '/api/battle/skill/' : '/api/battle/spell/';
+            const key = type === 'weapon' ? 'skill_id' : 'spell_id';
+
+            try {
+                const body = {};
+                body[key] = skillId;
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(body),
+                });
+                const data = await response.json();
+
+                if (data.state) {
+                    battleState = data.state;
+                    render();
+                    checkBattleEnd();
+                }
+            } catch(e) {
+                console.error('Ошибка:', e);
+            }
+        }
+
+        async function selectTarget(index) {
+            if (!battleState) return;
+            currentTargetIndex = index;
+
+            try {
+                const response = await fetch('/api/battle/target/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({index: index}),
+                });
+                const data = await response.json();
+                if (data.enemies) {
+                    battleState = data;
+                    render();
+                }
+            } catch(e) {
+                console.error('Ошибка:', e);
+            }
+        }
+
+        async function tryEscape() {
+            if (!battleState) return;
+
+            try {
+                const response = await fetch('/api/battle/escape/', { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('🏃 Ты сбежал!');
+                    leaveBattle();
+                } else {
+                    alert('❌ Не удалось сбежать!');
+                }
+            } catch(e) {
+                console.error('Ошибка:', e);
+            }
+        }
+
+        function checkBattleEnd() {
+            if (!battleState || !battleState.is_over) return;
+
+            if (gameLoop) {
+                clearInterval(gameLoop);
+                gameLoop = null;
+            }
+
+            const overlay = document.getElementById('resultOverlay');
+            const title = document.getElementById('resultTitle');
+            const info = document.getElementById('resultInfo');
+
+            if (battleState.player_won) {
+                title.textContent = '🎉 ПОБЕДА!';
+                title.className = 'result-title victory';
+                info.innerHTML = `Бой длился ${battleState.elapsed} сек`;
+            } else {
+                title.textContent = '💀 ПОРАЖЕНИЕ';
+                title.className = 'result-title defeat';
+                info.innerHTML = `Ты возрождён в городе с 1 HP`;
+            }
+
+            overlay.classList.add('active');
+        }
+
+        function leaveBattle() {
+            if (gameLoop) clearInterval(gameLoop);
+            localStorage.removeItem('battleEnemies');
+            window.location.href = '/map/';
+        }
+
+        startBattle();
+    </script>
 </body>
 </html>

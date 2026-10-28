@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class Biome(models.Model):
@@ -116,6 +117,78 @@ class Character(models.Model):
     skill_description = models.TextField()
     icon = models.CharField(max_length=200, blank=True)
     is_featured = models.BooleanField(default=False)  # В текущем баннере
+
+
+class GamePlayer(models.Model):
+    """Игровой персонаж. До 3 слотов на одного пользователя."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='game_players')
+    slot = models.IntegerField(default=1)  # 1, 2, 3
+
+    # Пустой слот (персонаж ещё не создан)
+    is_empty = models.BooleanField(default=True)
+
+    # Базовые
+    name = models.CharField(max_length=20, default='Герой')
+    gender = models.CharField(max_length=10, null=True, blank=True)
+    race = models.CharField(max_length=50, null=True, blank=True)
+    element = models.CharField(max_length=50, null=True, blank=True)
+    gold = models.IntegerField(default=100)
+
+    # Характеристики
+    strength = models.IntegerField(default=5)
+    agility = models.IntegerField(default=5)
+    intelligence = models.IntegerField(default=5)
+
+    # HP/MP
+    max_health = models.IntegerField(default=100)
+    current_health = models.IntegerField(default=100)
+    max_mana = models.IntegerField(default=50)
+    current_mana = models.IntegerField(default=50)
+
+    # Защита
+    armor = models.FloatField(default=0.0)
+    energy_shield = models.FloatField(default=0.0)
+    dodge = models.FloatField(default=0.0)
+
+    # Позиция на карте
+    player_x = models.IntegerField(default=13)
+    player_y = models.IntegerField(default=13)
+    city_selected = models.BooleanField(default=False)
+    current_screen = models.CharField(max_length=50, default='map')
+
+    # Оружие
+    weapon = models.JSONField(null=True, blank=True)
+    weapon_mastery = models.JSONField(default=dict, blank=True)
+    weapon_skills = models.JSONField(default=dict, blank=True)
+
+    # Стихия
+    element_mastery = models.FloatField(default=0.0)
+    element_spells = models.JSONField(default=dict, blank=True)
+    blessings = models.JSONField(default=dict, blank=True)
+
+    # Инвентарь и экипировка
+    inventory = models.JSONField(default=dict, blank=True)
+    equipment = models.JSONField(default=dict, blank=True)
+    codex = models.JSONField(default=dict, blank=True)
+
+    # Мета
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # Работа
+    work_end_time = models.CharField(max_length=50, null=True, blank=True)
+    work_reward = models.IntegerField(default=0)
+    work_name = models.CharField(max_length=100, null=True, blank=True)
+
+    class Meta:
+        unique_together = ('user', 'slot')
+        ordering = ['slot']
+
+    def __str__(self):
+        if self.is_empty:
+            return f"{self.user.username} — Слот {self.slot} (пусто)"
+        return f"{self.user.username} — Слот {self.slot}: {self.name}"
 
     def __str__(self):
         return f"{self.name} ({self.get_rarity_display()})"

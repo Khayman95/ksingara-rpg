@@ -1,18 +1,18 @@
 {
   "slot": 1,
-  "name": "Khayman",
+  "name": "05",
   "gender": "male",
-  "race": "hardl",
-  "raceName": "Хардлы",
-  "element": "ice",
-  "elementName": "Лёд",
+  "race": "gnome",
+  "raceName": "Гном",
+  "element": "wind",
+  "elementName": "Ветер (Вентирис)",
   "stats": {
-    "strength": 14,
+    "strength": 12,
     "agility": 12,
-    "intelligence": 14
+    "intelligence": 16
   },
   "playerX": 20,
   "playerY": 6,
   "citySelected": true,
-  "currentScreen": "brothel"
+  "currentScreen": "map"
 }

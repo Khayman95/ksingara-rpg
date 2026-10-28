@@ -181,6 +181,7 @@
                             passable: cell.passable,
                             settlement_name: cell.settlement_name,
                             settlement_type: cell.settlement_type,
+                            settlement_id: cell.settlement_id,
                         };
                     }
                 }
@@ -286,24 +287,31 @@
 
             if (isCity(playerX, playerY) && !choosingCity) {
                 const cityName = getCellName(playerX, playerY);
+                const cell = mapGrid[playerX]?.[playerY];
+
                 localStorage.setItem('currentCity', cityName);
+                localStorage.setItem('currentCityId', cell.settlement_id || 'Bergen');  // ← ДОБАВИТЬ
+
                 document.getElementById('cellInfo').innerHTML = `📍 <b>${cityName}</b> — <a href="/city/" style="color:#f0c040">войти в город</a>`;
-            } else if (choosingCity) {
-                document.getElementById('cellInfo').textContent = 'Нажми на 🏰 чтобы выбрать стартовый город';
-            } else {
-                document.getElementById('cellInfo').textContent = cellName;
             }
         }
 
         function selectCity(x, y) {
-            if (confirm(`Начать приключение в городе?\n\n${getCellName(x, y)}`)) {
+            const cellName = getCellName(x, y);
+            const cell = mapGrid[x]?.[y];
+
+            if (confirm(`Начать приключение в городе?\n\n${cellName}?`)) {
                 playerX = x;
                 playerY = y;
                 choosingCity = false;
                 citySelected = true;
+
                 localStorage.setItem('playerX', x);
                 localStorage.setItem('playerY', y);
                 localStorage.setItem('citySelected', 'true');
+                localStorage.setItem('currentCity', cellName);
+                localStorage.setItem('currentCityId', cell.settlement_id || 'Bergen');  // ← ДОБАВИТЬ
+
                 renderMap();
             }
         }

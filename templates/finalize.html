@@ -270,11 +270,15 @@
             document.getElementById('startBtn').disabled = !valid;
         }
 
-        function startGame() {
+        async function startGame() {
             const name = document.getElementById('nameInput').value.trim();
+
+            // Сохраняем временно в localStorage (для перехода)
             localStorage.setItem('playerName', name);
             localStorage.setItem('selectedGender', selectedGender);
-            window.location.href = '/save-game/';
+
+            // Переходим на экран выбора слота
+            window.location.href = '/choose-slot/';
         }
     </script>
 

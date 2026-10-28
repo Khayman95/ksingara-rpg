@@ -12,23 +12,26 @@
             font-family: 'Segoe UI', sans-serif;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
+            padding: 15px;
         }
         .container {
-            max-width: 500px;
+            max-width: 600px;
             width: 100%;
-            padding: 20px;
         }
+
         h1 {
             font-size: 24px;
             color: #f0c040;
             text-align: center;
             margin-bottom: 20px;
         }
+
+        /* ============ ШАПКА ПЕРСОНАЖА ============ */
         .character-header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .character-icon {
             font-size: 64px;
@@ -43,6 +46,45 @@
             font-size: 13px;
             color: #888;
         }
+
+        /* ============ HP/MP ============ */
+        .combat-stats {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .combat-bar-container {
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 10px 12px;
+        }
+        .combat-label {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        .combat-bar {
+            height: 14px;
+            background: #0a0a0f;
+            border-radius: 7px;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+        .combat-fill {
+            height: 100%;
+            border-radius: 7px;
+            transition: width 0.3s;
+        }
+        .hp-fill { background: linear-gradient(90deg, #cc3333, #ff5555); }
+        .mp-fill { background: linear-gradient(90deg, #3355cc, #5588ff); }
+        .combat-text {
+            font-size: 11px;
+            color: #888;
+            text-align: right;
+        }
+
+        /* ============ СТАТЫ ============ */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -68,16 +110,42 @@
         .stat-agi { color: #5e5; }
         .stat-int { color: #55e; }
 
-        h2 {
-            font-size: 16px;
-            color: #ccc;
-            margin-bottom: 10px;
+        /* ============ ВКЛАДКИ ============ */
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
         }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 13px;
+            color: #aaa;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            background: #2a2a4e;
+            color: #f0c040;
+            border-color: #f0c040;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ============ ОБЗОР ============ */
         .equipment-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 6px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .equip-slot {
             background: #1a1a2e;
@@ -88,16 +156,12 @@
             color: #888;
             text-align: center;
         }
-        .equip-slot .item {
-            color: #e0e0e0;
-            font-weight: bold;
-            font-size: 13px;
-        }
+
         .inventory {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 6px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .inv-slot {
             background: #1a1a2e;
@@ -112,22 +176,109 @@
             justify-content: center;
             gap: 4px;
         }
-        .inv-slot .item-icon {
-            font-size: 24px;
-        }
+        .inv-slot .item-icon { font-size: 24px; }
         .inv-slot .item-label {
             font-size: 9px;
             color: #aaa;
-            line-height: 1.1;
             max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-        .inv-slot.empty {
-            color: #444;
-            border-style: dashed;
+        .inv-slot.empty { color: #444; border-style: dashed; }
+
+        h2 {
+            font-size: 15px;
+            color: #ccc;
+            margin-bottom: 10px;
+            margin-top: 15px;
         }
+
+        /* ============ АРСЕНАЛ / МАГИЯ ============ */
+        .weapons-grid, .elements-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .weapon-card, .element-card {
+            background: #1a1a2e;
+            border: 2px solid #2a2a4e;
+            border-radius: 8px;
+            padding: 10px 5px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .weapon-card:hover, .element-card:hover {
+            border-color: #4a6a9e;
+            background: #1e1e38;
+        }
+        .weapon-card.current, .element-card.current {
+            border-color: #f0c040;
+            background: #2e2a1a;
+        }
+        .weapon-icon, .element-icon {
+            font-size: 28px;
+            margin-bottom: 4px;
+        }
+        .weapon-name, .element-name {
+            font-size: 10px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+        .weapon-stats {
+            font-size: 9px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .skill-block {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4e;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+        .skill-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .skill-name {
+            font-size: 13px;
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+        .skill-level {
+            font-size: 11px;
+            color: #f0c040;
+        }
+        .paths-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .path-btn {
+            padding: 5px 10px;
+            background: #2a2a4e;
+            border: 1px solid #3a3a5e;
+            border-radius: 6px;
+            font-size: 10px;
+            color: #ccc;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .path-btn:hover { background: #3a3a5e; }
+        .path-btn.selected {
+            background: #4a6e4a;
+            border-color: #88ff88;
+            color: #88ff88;
+            font-weight: bold;
+        }
+
+        /* ============ КНОПКА НАЗАД ============ */
         .btn-back {
             display: block;
             width: 100%;
@@ -138,21 +289,51 @@
             border-radius: 8px;
             font-size: 15px;
             cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            margin-top: 20px;
         }
         .btn-back:hover { background: #444; }
+
+        .success-msg {
+            text-align: center;
+            color: #5e5;
+            font-size: 13px;
+            margin-top: 10px;
+            min-height: 20px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>👤 ПЕРСОНАЖ</h1>
 
+        <!-- Шапка -->
         <div class="character-header">
             <div class="character-icon" id="charIcon">🧔</div>
-            <div class="character-name" id="charName">Герой</div>
-            <div class="character-race" id="charRace">Человек</div>
+            <div class="character-name" id="charName">Загрузка...</div>
+            <div class="character-race" id="charRace"></div>
         </div>
 
-        <!-- Характеристики -->
+        <!-- HP/MP -->
+        <div class="combat-stats">
+            <div class="combat-bar-container">
+                <div class="combat-label">❤️ Здоровье</div>
+                <div class="combat-bar">
+                    <div class="combat-fill hp-fill" id="hpFill" style="width:0%"></div>
+                </div>
+                <div class="combat-text" id="hpText">0 / 0</div>
+            </div>
+            <div class="combat-bar-container">
+                <div class="combat-label">💙 Мана</div>
+                <div class="combat-bar">
+                    <div class="combat-fill mp-fill" id="mpFill" style="width:0%"></div>
+                </div>
+                <div class="combat-text" id="mpText">0 / 0</div>
+            </div>
+        </div>
+
+        <!-- Статы -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-label">💪 Сила</div>
@@ -168,208 +349,525 @@
             </div>
         </div>
 
-        <!-- Экипировка -->
-        <h2>🛡️ Экипировка</h2>
-        <div class="equipment-grid">
-            <div class="equip-slot">🪖 Шлем: <span id="slot-helmet">Нет</span></div>
-            <div class="equip-slot">🛡️ Доспех: <span id="slot-armor">Нет</span></div>
-            <div class="equip-slot">👖 Штаны: <span id="slot-pants">Нет</span></div>
-            <div class="equip-slot">🧤 Лев. перчатка: <span id="slot-gloves_left">Нет</span></div>
-            <div class="equip-slot">🧤 Прав. перчатка: <span id="slot-gloves_right">Нет</span></div>
-            <div class="equip-slot">👢 Лев. ботинок: <span id="slot-boots_left">Нет</span></div>
-            <div class="equip-slot">👢 Прав. ботинок: <span id="slot-boots_right">Нет</span></div>
-            <div class="equip-slot">💍 Лев. кольцо: <span id="slot-ring_left">Нет</span></div>
-            <div class="equip-slot">💍 Прав. кольцо: <span id="slot-ring_right">Нет</span></div>
-            <div class="equip-slot">📿 Амулет: <span id="slot-amulet">Нет</span></div>
-            <div class="equip-slot">🪢 Пояс: <span id="slot-belt">Нет</span></div>
-            <div class="equip-slot">🧣 Плащ: <span id="slot-cloak">Нет</span></div>
+        <!-- Вкладки -->
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('overview')">👤 Обзор</div>
+            <div class="tab" onclick="switchTab('arsenal')">⚔️ Арсенал</div>
+            <div class="tab" onclick="switchTab('magic')">✨ Магия</div>
         </div>
 
-        <!-- Инвентарь -->
-        <h2>🎒 Инвентарь</h2>
-        <div class="inventory" id="inventoryGrid"></div>
+        <!-- Вкладка: ОБЗОР -->
+        <div class="tab-content active" id="tab-overview">
+            <h2>🛡️ Экипировка</h2>
+            <div class="equipment-grid" id="equipmentGrid"></div>
+
+            <h2>🎒 Инвентарь</h2>
+            <div class="inventory" id="inventoryGrid"></div>
+        </div>
+
+        <!-- Вкладка: АРСЕНАЛ -->
+        <div class="tab-content" id="tab-arsenal">
+            <h2>Текущее оружие</h2>
+            <div class="weapon-card current" id="currentWeapon" style="cursor:default;"></div>
+
+            <h2>Выбери оружие</h2>
+            <div class="weapons-grid" id="weaponsGrid"></div>
+
+            <h2>Навыки оружия и пути</h2>
+            <div id="weaponSkillsSection"></div>
+        </div>
+
+        <!-- Вкладка: МАГИЯ -->
+        <div class="tab-content" id="tab-magic">
+            <h2>Текущая стихия</h2>
+            <div class="element-card current" id="currentElement" style="cursor:default;"></div>
+
+            <h2>Выбери стихию</h2>
+            <div class="elements-grid" id="elementsGrid"></div>
+
+            <h2>Заклинания и пути</h2>
+            <div id="spellsSection"></div>
+        </div>
+
+        <div class="success-msg" id="successMsg"></div>
 
         <button class="btn-back" onclick="returnToGame()">← Назад</button>
     </div>
 
     <script>
-        // Загружаем данные персонажа
-        const race = JSON.parse(localStorage.getItem('selectedRace') || '{}');
-        const element = JSON.parse(localStorage.getItem('selectedElement') || '{}');
-        const name = localStorage.getItem('playerName') || 'Герой';
-
-        document.getElementById('charIcon').textContent = race.icon || '🧔';
-        document.getElementById('charName').textContent = name;
-        document.getElementById('charRace').textContent = `${race.name || 'Человек'} | ${element.name || 'Огонь'}`;
-
-        const stats = race.stats || { strength: 0, agility: 0, intelligence: 0 };
-        document.getElementById('statStr').textContent = stats.strength;
-        document.getElementById('statAgi').textContent = stats.agility;
-        document.getElementById('statInt').textContent = stats.intelligence;
-
-        // Инвентарь
-        let inventory = [];
-        try {
-            const raw = localStorage.getItem('inventory');
-            if (raw && raw !== 'undefined') {
-                inventory = JSON.parse(raw);
-            }
-        } catch(e) {
-            console.log('Ошибка чтения инвентаря:', e);
-            inventory = [];
-        }
-
-        const grid = document.getElementById('inventoryGrid');
-        grid.innerHTML = '';
-
-        for (let i = 0; i < 9; i++) {
-            const slot = document.createElement('div');
-
-            if (i < inventory.length) {
-                const item = inventory[i];
-                slot.className = 'inv-slot';
-
-                if (typeof item === 'object') {
-                    const qty = item.quantity > 1 ? ` ×${item.quantity}` : '';
-                    slot.innerHTML = `
-                        <div class="item-icon">${item.icon || '📦'}</div>
-                        <div class="item-label">${item.name || 'Предмет'}${qty}</div>
-                    `;
-                    // Клик по предмету — экипировать или использовать
-                    slot.onclick = () => handleItemClick(item, i);
-                    slot.title = 'Нажми, чтобы экипировать/использовать';
-                }
-            } else {
-                slot.className = 'inv-slot empty';
-                slot.innerHTML = '<div class="item-icon">·</div>';
-            }
-
-            grid.appendChild(slot);
-        }
-
-        function handleItemClick(item, index) {
-            // Проверяем, можно ли экипировать
-            const slotMapping = {
-                'шлем': 'helmet',
-                'доспех': 'armor',
-                'штаны': 'pants',
-                'перчатк': 'gloves_left',
-                'рукавиц': 'gloves_left',
-                'сапог': 'boots_left',
-                'ботинок': 'boots_left',
-                'кольцо': 'ring_left',
-                'амулет': 'amulet',
-                'пояс': 'belt',
-                'плащ': 'cloak',
-            };
-
-            const itemName = (item.name || '').toLowerCase();
-            let slotId = null;
-
-            for (const [keyword, slot] of Object.entries(slotMapping)) {
-                if (itemName.includes(keyword)) {
-                    slotId = slot;
-                    break;
-                }
-            }
-
-            if (slotId) {
-                equipItem(item, index, slotId);
-            } else {
-                alert(`${item.name} — это расходник или предмет без слота`);
-            }
-        }
-
-        function equipItem(item, index, slotId) {
-            // Сохраняем экипировку
-            let equipment = {};
-            try {
-                equipment = JSON.parse(localStorage.getItem('equipment') || '{}');
-            } catch(e) { equipment = {}; }
-
-            equipment[slotId] = {
-                name: item.name,
-                icon: item.icon,
-            };
-
-            localStorage.setItem('equipment', JSON.stringify(equipment));
-
-            // Убираем из инвентаря
-            let inventory = JSON.parse(localStorage.getItem('inventory') || '[]');
-            inventory.splice(index, 1);
-            localStorage.setItem('inventory', JSON.stringify(inventory));
-
-            location.reload();
-        }
-
-        // Загружаем экипировку
-        let equipment = {};
-        try {
-            equipment = JSON.parse(localStorage.getItem('equipment') || '{}');
-        } catch(e) { equipment = {}; }
-
-        // Обновляем слоты экипировки
-        const equipmentSlots = {
-            'helmet': 'slot-helmet',
-            'armor': 'slot-armor',
-            'pants': 'slot-pants',
-            'gloves_left': 'slot-gloves_left',
-            'gloves_right': 'slot-gloves_right',
-            'boots_left': 'slot-boots_left',
-            'boots_right': 'slot-boots_right',
-            'ring_left': 'slot-ring_left',
-            'ring_right': 'slot-ring_right',
-            'amulet': 'slot-amulet',
-            'belt': 'slot-belt',
-            'cloak': 'slot-cloak',
+        const RACE_ICONS = {
+            'human': '🧔', 'elf': '🧝', 'gnome': '🧔‍♂️', 'alfir': '🧝‍♂️',
+            'hardl': '🛡️', 'elgarn': '🔮', 'adamantin': '⚙️',
+            'luminar': '✨', 'kinetik': '🤖',
         };
 
-        for (const [slotId, elementId] of Object.entries(equipmentSlots)) {
-            const element = document.getElementById(elementId);
-            if (element && equipment[slotId]) {
-                element.textContent = equipment[slotId].icon + ' ' + equipment[slotId].name;
-                element.style.color = '#e0e0e0';
+        const ELEMENT_ICONS = {
+            'fire': '🔥', 'water': '💧', 'wind': '💨',
+            'boiling_shadow': '🌑', 'plasma': '⚡', 'ice': '❄️',
+            'storm': '🌩️', 'crystal_storm': '💎', 'phoenix_blood': '🩸'
+        };
+
+        const RACE_NAMES = {
+            'human': 'Человек', 'elf': 'Эльф', 'gnome': 'Гном',
+            'alfir': 'Альфир', 'hardl': 'Хардлы', 'elgarn': 'Эльгарн',
+            'adamantin': 'Адамантин', 'luminar': 'Люминар', 'kinetik': 'Кинетик',
+        };
+
+        const ELEMENT_NAMES = {
+            'fire': 'Огонь', 'water': 'Вода', 'wind': 'Ветер',
+            'boiling_shadow': 'Кипящая Тень', 'plasma': 'Плазма',
+            'ice': 'Лёд', 'storm': 'Молния',
+            'crystal_storm': 'Хрустальная Буря', 'phoenix_blood': 'Кровь Феникса',
+        };
+
+        let arsenalData = null;
+        let magicData = null;
+
+        // ============ ЗАГРУЗКА СТАТОВ ============
+        async function loadPlayerStats() {
+            try {
+                const response = await fetch('/api/player/stats/');
+                const data = await response.json();
+
+                document.getElementById('charName').textContent = data.name || 'Герой';
+                document.getElementById('charIcon').textContent = RACE_ICONS[data.race] || '🧔';
+                document.getElementById('charRace').textContent =
+                    `${RACE_NAMES[data.race] || '?'} | ${ELEMENT_NAMES[data.element] || '?'}`;
+
+                const hpPercent = data.max_hp > 0 ? (data.hp / data.max_hp) * 100 : 0;
+                document.getElementById('hpFill').style.width = hpPercent + '%';
+                document.getElementById('hpText').textContent = `${data.hp} / ${data.max_hp}`;
+
+                const mpPercent = data.max_mp > 0 ? (data.mp / data.max_mp) * 100 : 0;
+                document.getElementById('mpFill').style.width = mpPercent + '%';
+                document.getElementById('mpText').textContent = `${data.mp} / ${data.max_mp}`;
+
+                document.getElementById('statStr').textContent = data.strength;
+                document.getElementById('statAgi').textContent = data.agility;
+                document.getElementById('statInt').textContent = data.intelligence;
+
+                renderOverview(data);
+
+            } catch(e) {
+                console.error('Ошибка загрузки статов:', e);
             }
+        }
+
+        // ============ ВКЛАДКИ ============
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tabName).classList.add('active');
+
+            if (tabName === 'arsenal' && !arsenalData) {
+                loadArsenal();
+            }
+            if (tabName === 'magic' && !magicData) {
+                loadMagic();
+            }
+        }
+
+        // ============ ОБЗОР ============
+        function renderOverview(data) {
+            // ============ ЭКИПИРОВКА ============
+            const equipGrid = document.getElementById('equipmentGrid');
+            const equipment = data.equipment || {};
+            const itemsData = data.items_data || {};
+
+            const slots = [
+                { key: 'helmet', icon: '🪖', name: 'Шлем' },
+                { key: 'armor', icon: '🛡️', name: 'Доспех' },
+                { key: 'pants', icon: '👖', name: 'Штаны' },
+                { key: 'gloves_left', icon: '🧤', name: 'Лев. перчатка' },
+                { key: 'gloves_right', icon: '🧤', name: 'Прав. перчатка' },
+                { key: 'boots_left', icon: '👢', name: 'Лев. ботинок' },
+                { key: 'boots_right', icon: '👢', name: 'Прав. ботинок' },
+                { key: 'ring_left', icon: '💍', name: 'Лев. кольцо' },
+                { key: 'ring_right', icon: '💍', name: 'Прав. кольцо' },
+                { key: 'amulet', icon: '📿', name: 'Амулет' },
+                { key: 'belt', icon: '🪢', name: 'Пояс' },
+                { key: 'cloak', icon: '🧣', name: 'Плащ' },
+            ];
+
+            equipGrid.innerHTML = '';
+            slots.forEach(slot => {
+                const itemId = equipment[slot.key];
+                const item = itemId && itemsData[itemId] ? itemsData[itemId] : null;
+
+                const div = document.createElement('div');
+                div.className = 'equip-slot';
+
+                if (item) {
+                    div.innerHTML = `${slot.icon} ${slot.name}: <b style="color:#e0e0e0">${item.name}</b>`;
+                    div.style.cursor = 'pointer';
+                    div.onclick = () => unequipItem(slot.key);
+                } else {
+                    div.innerHTML = `${slot.icon} ${slot.name}: <span style="color:#555">Нет</span>`;
+                }
+
+                equipGrid.appendChild(div);
+            });
+
+            // ============ ИНВЕНТАРЬ ============
+            const inventory = data.inventory || {items: []};
+            const items = inventory.items || [];
+
+            const invGrid = document.getElementById('inventoryGrid');
+            invGrid.innerHTML = '';
+
+            for (let i = 0; i < 9; i++) {
+                const slot = document.createElement('div');
+
+                if (i < items.length) {
+                    const item = items[i];
+                    const itemData = itemsData[item.id] || item;
+                    const icon = itemData.icon || item.icon || '📦';
+                    const name = itemData.name || item.name || '?';
+                    const qty = item.quantity > 1 ? ` ×${item.quantity}` : '';
+
+                    slot.className = 'inv-slot';
+                    slot.style.cursor = 'pointer';
+                    slot.innerHTML = `
+                        <div class="item-icon">${icon}</div>
+                        <div class="item-label">${name}${qty}</div>
+                    `;
+                    slot.onclick = () => equipItem(item.id);
+                } else {
+                    slot.className = 'inv-slot empty';
+                    slot.innerHTML = '<div class="item-icon">·</div>';
+                }
+
+                invGrid.appendChild(slot);
+            }
+        }
+
+        async function equipItem(itemId) {
+            try {
+                const response = await fetch('/api/player/equip/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({item_id: itemId}),
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess('✅ ' + data.message);
+                    loadPlayerStats();  // Перезагрузить всё
+                } else {
+                    showSuccess('❌ ' + data.message, true);
+                }
+            } catch(e) {
+                showSuccess('❌ Ошибка', true);
+            }
+        }
+
+        async function unequipItem(slotKey) {
+            try {
+                const response = await fetch('/api/player/unequip/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({slot: slotKey}),
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess('✅ ' + data.message);
+                    loadPlayerStats();
+                } else {
+                    showSuccess('❌ ' + data.message, true);
+                }
+            } catch(e) {
+                showSuccess('❌ Ошибка', true);
+            }
+        }
+
+        // ============ АРСЕНАЛ ============
+        async function loadArsenal() {
+            try {
+                const response = await fetch('/api/arsenal/data/');
+                const data = await response.json();
+                arsenalData = data;
+                renderArsenal();
+            } catch(e) {
+                console.error('Ошибка:', e);
+            }
+        }
+
+        function renderArsenal() {
+            if (!arsenalData) return;
+
+            const current = arsenalData.current_weapon;
+            const weapons = arsenalData.weapons || [];
+            const skills = arsenalData.skills || [];
+            const paths = arsenalData.paths || {};
+            const mastery = arsenalData.weapon_mastery || {};
+
+            // Текущее оружие
+            const curWeapon = weapons.find(w => w.id === current);
+            const curEl = document.getElementById('currentWeapon');
+            if (curWeapon) {
+                const masteryValue = mastery[current] || 0;
+                curEl.innerHTML = `
+                    <div class="weapon-icon">${curWeapon.icon}</div>
+                    <div class="weapon-name">${curWeapon.name}</div>
+                    <div class="weapon-stats">⚡${curWeapon.speed} ⚔️${curWeapon.physical} ✨${curWeapon.magic}</div>
+                    <div style="font-size:12px;color:#f0c040;margin-top:8px;">
+                        📊 Владение: ${masteryValue.toFixed(1)}%
+                    </div>
+                `;
+            } else {
+                curEl.innerHTML = '<div class="weapon-name">Нет оружия</div>';
+            }
+
+            // Сетка оружия
+            const grid = document.getElementById('weaponsGrid');
+            grid.innerHTML = '';
+            weapons.forEach(w => {
+                const card = document.createElement('div');
+                card.className = 'weapon-card' + (w.id === current ? ' current' : '');
+                card.innerHTML = `
+                    <div class="weapon-icon">${w.icon}</div>
+                    <div class="weapon-name">${w.name}</div>
+                    <div class="weapon-stats">⚡${w.speed} ⚔️${w.physical} ✨${w.magic}</div>
+                `;
+                card.onclick = () => changeWeapon(w.id);
+                grid.appendChild(card);
+            });
+
+            // Навыки
+            const section = document.getElementById('weaponSkillsSection');
+            section.innerHTML = '';
+
+            if (!skills.length) {
+                section.innerHTML = '<div style="text-align:center;color:#666;padding:20px;">Экипируй оружие</div>';
+                return;
+            }
+
+            skills.forEach(skill => {
+                const currentPath = paths[skill.id] || null;
+                const block = document.createElement('div');
+                block.className = 'skill-block';
+                block.innerHTML = `
+                    <div class="skill-header">
+                        <span class="skill-name">${skill.icon || '⚔️'} ${skill.name}</span>
+                        <span class="skill-level">Ур. ${skill.level}/9</span>
+                    </div>
+                    <div class="paths-row">
+                        <button class="path-btn ${!currentPath ? 'selected' : ''}"
+                                onclick="setWeaponPath('${skill.id}', null)">Без пути</button>
+                        ${skill.paths.map(p => `
+                            <button class="path-btn ${currentPath === p.path_id ? 'selected' : ''}"
+                                    onclick="setWeaponPath('${skill.id}', '${p.path_id}')"
+                                    title="${p.description}">
+                                ${p.name}
+                            </button>
+                        `).join('')}
+                    </div>
+                `;
+                section.appendChild(block);
+            });
+        }
+
+        async function changeWeapon(weaponType) {
+            if (!confirm(`Сменить оружие на "${arsenalData.weapons.find(w => w.id === weaponType).name}"?`)) return;
+
+            try {
+                const response = await fetch('/api/arsenal/change-weapon/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({weapon_type: weaponType}),
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess('✅ Оружие изменено!');
+                    await loadArsenal();
+                } else {
+                    showSuccess('❌ ' + data.message, true);
+                }
+            } catch(e) {
+                showSuccess('❌ Ошибка', true);
+            }
+        }
+
+        async function setWeaponPath(skillId, pathId) {
+            try {
+                const response = await fetch('/api/arsenal/set-path/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({skill_id: skillId, path_id: pathId}),
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess('✅ Путь ' + (pathId ? 'выбран' : 'сброшен'));
+                    await loadArsenal();
+                } else {
+                    showSuccess('❌ ' + data.message, true);
+                }
+            } catch(e) {
+                showSuccess('❌ Ошибка', true);
+            }
+        }
+
+        // ============ МАГИЯ ============
+        async function loadMagic() {
+            try {
+                const response = await fetch('/api/magic/data/');
+                const data = await response.json();
+                magicData = data;
+                renderMagic();
+            } catch(e) {
+                console.error('Ошибка:', e);
+            }
+        }
+
+        function renderMagic() {
+            if (!magicData) return;
+
+            const current = magicData.current_element;
+            const elements = magicData.elements || [];
+            const spells = magicData.spells || [];
+            const paths = magicData.paths || {};
+
+            // Текущая стихия
+            const curEl = document.getElementById('currentElement');
+            if (current) {
+                curEl.innerHTML = `
+                    <div class="element-icon">${ELEMENT_ICONS[current] || '❓'}</div>
+                    <div class="element-name">${ELEMENT_NAMES[current] || current}</div>
+                `;
+            } else {
+                curEl.innerHTML = '<div class="element-name">Нет стихии</div>';
+            }
+
+            // Сетка стихий
+            const grid = document.getElementById('elementsGrid');
+            grid.innerHTML = '';
+            elements.forEach(e => {
+                const card = document.createElement('div');
+                card.className = 'element-card' + (e.id === current ? ' current' : '');
+                card.innerHTML = `
+                    <div class="element-icon">${e.icon || ELEMENT_ICONS[e.id] || '❓'}</div>
+                    <div class="element-name">${e.name || ELEMENT_NAMES[e.id]}</div>
+                `;
+                card.onclick = () => changeElement(e.id);
+                grid.appendChild(card);
+            });
+
+            // Заклинания
+            const section = document.getElementById('spellsSection');
+            section.innerHTML = '';
+
+            if (!spells.length) {
+                section.innerHTML = '<div style="text-align:center;color:#666;padding:20px;">Выбери стихию</div>';
+                return;
+            }
+
+            spells.forEach(spell => {
+                const currentPath = paths[spell.id] || null;
+                const block = document.createElement('div');
+                block.className = 'skill-block';
+                block.innerHTML = `
+                    <div class="skill-header">
+                        <span class="skill-name">${spell.icon || '✨'} ${spell.name}</span>
+                        <span class="skill-level">Ур. ${spell.level}/9</span>
+                    </div>
+                    <div class="paths-row">
+                        <button class="path-btn ${!currentPath ? 'selected' : ''}"
+                                onclick="setSpellPath('${spell.id}', null)">Без пути</button>
+                        ${spell.paths.map(p => `
+                            <button class="path-btn ${currentPath === p.path_id ? 'selected' : ''}"
+                                    onclick="setSpellPath('${spell.id}', '${p.path_id}')"
+                                    title="${p.description}">
+                                ${p.name}
+                            </button>
+                        `).join('')}
+                    </div>
+                `;
+                section.appendChild(block);
+            });
+        }
+
+        async function changeElement(elementId) {
+            if (!confirm(`Сменить стихию на "${ELEMENT_NAMES[elementId]}"?`)) return;
+
+            try {
+                const response = await fetch('/api/magic/change-element/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({element: elementId}),
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess('✅ Стихия изменена!');
+                    await loadMagic();
+                } else {
+                    showSuccess('❌ ' + data.message, true);
+                }
+            } catch(e) {
+                showSuccess('❌ Ошибка', true);
+            }
+        }
+
+        async function setSpellPath(spellId, pathId) {
+            try {
+                const response = await fetch('/api/magic/set-path/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({spell_id: spellId, path_id: pathId}),
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showSuccess('✅ Путь ' + (pathId ? 'выбран' : 'сброшен'));
+                    await loadMagic();
+                } else {
+                    showSuccess('❌ ' + data.message, true);
+                }
+            } catch(e) {
+                showSuccess('❌ Ошибка', true);
+            }
+        }
+
+        // ============ ОБЩЕЕ ============
+        function showSuccess(msg, isError = false) {
+            const el = document.getElementById('successMsg');
+            el.textContent = msg;
+            el.style.color = isError ? '#e55' : '#5e5';
+            setTimeout(() => el.textContent = '', 2000);
         }
 
         function returnToGame() {
-           const returnScreen = localStorage.getItem('returnScreen') || '/city/';
-           localStorage.removeItem('returnScreen');  // Очищаем
-           window.location.href = returnScreen;
+            const returnScreen = localStorage.getItem('returnScreen') || '/city/';
+            localStorage.removeItem('returnScreen');
+            window.location.href = returnScreen;
         }
 
-        // Клик по слоту экипировки — снять предмет
-        for (const [slotId, elementId] of Object.entries(equipmentSlots)) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                element.onclick = () => unequipItem(slotId);
-            }
-        }
-
-        function unequipItem(slotId) {
-            let equipment = {};
+        async function equipItem(itemId) {
             try {
-                equipment = JSON.parse(localStorage.getItem('equipment') || '{}');
-            } catch(e) { equipment = {}; }
+                const response = await fetch('/api/player/equip/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({item_id: itemId}),
+                });
+                const data = await response.json();
 
-            if (!equipment[slotId]) return;
-
-            // Возвращаем предмет в инвентарь
-            let inventory = JSON.parse(localStorage.getItem('inventory') || '[]');
-            if (inventory.length < 9) {
-                inventory.push(equipment[slotId]);
-                localStorage.setItem('inventory', JSON.stringify(inventory));
-
-                delete equipment[slotId];
-                localStorage.setItem('equipment', JSON.stringify(equipment));
-
-                location.reload();
-            } else {
-                alert('Инвентарь полон!');
+                if (data.success) {
+                    showSuccess('✅ ' + data.message);
+                    loadPlayerStats();  // Обновить статы
+                } else {
+                    showSuccess('❌ ' + data.message, true);
+                }
+            } catch(e) {
+                showSuccess('❌ Ошибка', true);
             }
         }
+        // ============ СТАРТ ============
+        loadPlayerStats();
     </script>
-    <script src="/static/js/autosave.js"></script>
-    <script src="/static/js/navbar.js"></script>
 </body>
 </html>
